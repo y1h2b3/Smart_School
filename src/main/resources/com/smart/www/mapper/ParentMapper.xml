@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.ParentMapper">
+
+    <resultMap id="BaseResultMap" type="Parent">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="parentId" column="parent_id" jdbcType="INTEGER"/>
+        <result property="type" column="type" jdbcType="VARCHAR"/>
+        <result property="studentId" column="student_id" jdbcType="INTEGER"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="phone" column="phone" jdbcType="VARCHAR"/>
+        <result property="sex" column="sex" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+        ,parent_id,type,
+        student_id,name,username,
+        password,phone,sex,
+        create_time,update_time
+    </sql>
+    <delete id="removeParentByPid">
+        delete
+        from parent
+        where parent_id = #{parentId}
+    </delete>
+
+    <select id="findAllparent" resultType="com.smart.www.pojo.Parent">
+        select p.img as image,p.parent_id,p.name,p.sex,s.name as studentName,s.clazz as
+        studentClazz,p.phone,p.password,s.student_id as studentId,s.status,s.grade,s.clazz
+        from parent p
+        join student s on p.parent_id = s.parent_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countAllParent" resultType="java.lang.Integer">
+        SELECT count(*) FROM parent
+    </select>
+    <select id="searchByName" resultType="com.smart.www.pojo.Parent">
+        select p.img as image,p.parent_id,p.name,p.sex,s.name as studentName,s.clazz as studentClazz,p.phone,p.password
+        from parent p
+        join student s on p.parent_id = s.parent_id
+        where p.name like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByparentId" resultType="com.smart.www.pojo.Parent">
+        select p.img as image,p.parent_id,p.name,p.sex,s.name as studentName,s.clazz as studentClazz,p.phone,p.password
+        from parent p
+        join student s on p.parent_id = s.parent_id
+        where p.parent_id like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchBystudentId" resultType="com.smart.www.pojo.Parent">
+        select p.img as image,p.parent_id,p.name,p.sex,s.name as studentName,s.clazz as studentClazz,p.phone,p.password
+        from parent p
+        join student s on p.parent_id = s.parent_id
+        where p.student_id like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchBySex" resultType="com.smart.www.pojo.Parent">
+        select p.img as image,p.parent_id,p.name,p.sex,s.name as studentName,s.clazz as
+        studentClazz,p.phone,p.password,s.status
+        from parent p
+        join student s on p.parent_id = s.parent_id
+        where p.sex like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="findAllParent2" resultType="com.smart.www.pojo.Parent">
+        select p.img        as image,
+               p.parent_id,
+               p.name,
+               p.sex,
+               s.name       as studentName,
+               s.clazz      as studentClazz,
+               p.phone,
+               p.password,
+               s.student_id as studentId,
+               s.status,s.grade,s.clazz
+        from parent p
+                 join student s on p.parent_id = s.parent_id
+    </select>
+    <select id="searchParentType" resultType="com.smart.www.pojo.Parent">
+        select p.img as image,p.parent_id,p.name,p.sex,s.name as studentName,s.clazz as
+        studentClazz,p.phone,p.password,s.student_id as studentId,s.status,s.grade,s.clazz, p.create_time, p.update_time
+        from parent p
+        join student s on p.parent_id = s.parent_id
+        <where>
+            <if test="clazz!=null">
+                and s.clazz like concat('%', #{clazz}, '%')
+            </if>
+            <if test="PName!=null">
+                and p.name like CONCAT('%',#{PName},'%')
+            </if>
+            <if test="SName!=null">
+                and S.name like CONCAT('%',#{SName},'%')
+            </if>
+            <if test="Sid!=null">
+                and s.student_id like CONCAT('%',#{Sid},'%')
+            </if>
+            <if test="phone != null">
+                AND p.phone = #{phone}
+            </if>
+        </where>
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countParentType" resultType="java.lang.Integer">
+        select count(*)
+        from parent p
+        join student s on p.parent_id = s.parent_id
+        <where>
+            <if test="clazz!=null">
+                and s.clazz like concat('%', #{clazz}, '%')
+            </if>
+            <if test="PName!=null">
+                and p.name like CONCAT('%',#{PName},'%')
+            </if>
+            <if test="SName!=null">
+                and S.name like CONCAT('%',#{SName},'%')
+            </if>
+            <if test="Sid!=null">
+                and s.student_id like CONCAT('%',#{Sid},'%')
+            </if>
+            <if test="phone != null">
+                AND p.phone = #{phone}
+            </if>
+        </where>
+    </select>
+</mapper>

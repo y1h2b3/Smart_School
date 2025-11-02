@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.LogsDataMapper">
+
+    <resultMap id="BaseResultMap" type="com.smart.www.pojo.LogsData">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="dataId" column="data_id" jdbcType="VARCHAR"/>
+        <result property="userId" column="user_id" jdbcType="VARCHAR"/>
+        <result property="logsType" column="logs_type" jdbcType="VARCHAR"/>
+        <result property="result" column="result" jdbcType="VARCHAR"/>
+        <result property="msg" column="msg" jdbcType="VARCHAR"/>
+        <result property="ip" column="ip" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,data_id,user_id,
+        logs_type,result,msg,
+        ip地址,create_time,update_time
+    </sql>
+    <insert id="addLogsData">
+        insert into logs_data
+        values (null, #{dataId}, #{userId}, #{logsType}, #{result}, #{msg}, #{ip}, #{isSuccess}, #{createTime})
+    </insert>
+    <select id="searchByUserId" resultType="com.smart.www.pojo.LogsData">
+        select dataId,logs_type,result,msg,ip,create_time,is_success from logs_data where user_id like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByLogsType" resultType="com.smart.www.pojo.LogsData">
+        select dataId,logs_type,result,msg,ip,create_time,,is_success from logs_data where logs_type like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByResult" resultType="com.smart.www.pojo.LogsData">
+        select dataId,logs_type,result,msg,ip,create_time,is_success from logs_data where result like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByMsg" resultType="com.smart.www.pojo.LogsData">
+        select dataId,logs_type,result,msg,ip,create_time,is_success from logs_data where msg like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchLogsData" resultType="com.smart.www.pojo.LogsData">
+        select data_id as dataId,logs_type,result,msg,ip,create_time,is_success from logs_data
+        <where>
+            <if test="account != null">
+                and user_id like CONCAT('%',#{account},'%')
+            </if>
+            <if test="startTime != null and endTime != null">
+                and create_time between #{startTime} and #{endTime}
+            </if>
+            <if test="type!=null">
+                and logs_type like CONCAT('%',#{type},'%')
+            </if>
+            <if test="result!=null">
+                and result like CONCAT('%',#{result},'%')
+            </if>
+        </where>
+        order by create_time desc
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countLogsData">
+        select count(*) from logs_data
+        <where>
+            <if test="account != null">
+                and user_id like CONCAT('%',#{account},'%')
+            </if>
+            <if test="startTime != '' and startTime != null and endTime != '' and endTime != null ">
+                and create_time between #{startTime} and #{endTime}
+            </if>
+            <if test="type!=null">
+                and logs_type like CONCAT('%',#{type},'%')
+            </if>
+            <if test="result!=null">
+                and is_success like CONCAT('%',#{result},'%')
+            </if>
+        </where>
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+    </select>
+    <!--limit #{size} offset #{offset}-->
+    <select id="findAllLogsData" resultType="com.smart.www.pojo.LogsData">
+        select data_id,logs_type,result,msg,ip,create_time,is_success from logs_data
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countAllLogsData" resultType="java.lang.Integer">
+        select count(*) from logs_data
+    </select>
+</mapper>

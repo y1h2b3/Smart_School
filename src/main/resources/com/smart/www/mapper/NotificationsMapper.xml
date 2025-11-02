@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.NotificationsMapper">
+
+    <resultMap id="BaseResultMap" type="Notifications">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="notifyId" column="notify_id" jdbcType="INTEGER"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="time" column="time" jdbcType="TIMESTAMP"/>
+        <result property="notifyGroup" column="notify_group" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,notify_id,title,
+        content,time,notify_group,
+        create_time,update_time
+    </sql>
+    <update id="updateNotifications">
+        update smart_campus.notifications
+        <set>
+            <if test="title != null">
+                title = #{title},
+            </if>
+            <if test="content != null">
+                content = #{content},
+            </if>
+            <if test="time != null">
+                time = #{time},
+            </if>
+            <if test="notifyGroup != null">
+                notify_group = #{notifyGroup},
+            </if>
+            <if test="publisher != null">
+                publisher = #{publisher},
+            </if>
+            update_time = now()
+        </set>
+        where notify_id = #{notifyId}
+    </update>
+    <select id="searchBytitle" resultType="com.smart.www.pojo.Notifications">
+        select notify_id as notifyId,publisher,title,content,time,notify_group as notifyGroup
+        from notifications
+        where title like concat('%',#{value},'%')
+        order by time desc
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchBypublisher" resultType="com.smart.www.pojo.Notifications">
+        select notify_id as notifyId,publisher,title,content,time,notify_group as notifyGroup
+        from notifications
+        where publisher like concat('%',#{value},'%')
+        order by time desc
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchBynotifyGroup" resultType="com.smart.www.pojo.Notifications">
+        select notify_id as notifyId,publisher,title,content,time,notify_group as notifyGroup
+        from notifications
+        where notify_group like concat('%',#{value},'%')
+        order by time desc
+        limit #{size} offset #{offset}
+    </select>
+    <select id="findAllNotifications" resultType="com.smart.www.pojo.Notifications">
+        select notify_id as notifyId,publisher,title,content,time,notify_group as notifyGroup
+        from notifications
+        <where>
+            <if test="user!= null">
+                notify_group like concat('%',#{user},'%')
+            </if>
+        </where>
+        order by time desc
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countAllNotifications" resultType="java.lang.Integer">
+        select count(*)
+        from notifications
+        where notify_group like concat('%',#{user},'%')
+    </select>
+</mapper>

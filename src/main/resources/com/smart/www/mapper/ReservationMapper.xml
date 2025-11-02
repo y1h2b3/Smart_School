@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.ReservationMapper">
+
+    <resultMap id="BaseResultMap" type="Reservation">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="reservationId" column="reservation_id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="staffId" column="staff_id" jdbcType="VARCHAR"/>
+        <result property="time" column="time" jdbcType="TIMESTAMP"/>
+        <result property="location" column="location" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,reservation_id,user_id,
+        staff_id,time,location,
+        create_time,update_time
+    </sql>
+    <update id="updateReservation">
+        update reservation
+        <set>
+            <if test="reservationId != null">
+                reservation_id = #{reservationId},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="staffId != null">
+                staff_id = #{staffId},
+            </if>
+            <if test="time != null">
+                time = #{time},
+            </if>
+            <if test="location != null">
+                location = #{location},
+            </if>
+            update_time = now()
+        </set>
+        where reservation_id = #{reservationId}
+    </update>
+    <select id="findAllReservation" resultType="com.smart.www.pojo.Reservation">
+        SELECT
+        r.reservation_id,r.user_id,COALESCE(t.name, l.name, st.name) AS userName,s.staff_id,s.name AS
+        staffName,r.time,r.location
+        FROM
+        reservation r
+        JOIN staff s ON r.staff_id = s.staff_id
+        LEFT JOIN teacher t ON r.user_id = t.teacher_id
+        LEFT JOIN logistics l ON r.user_id = l.logistics_id
+        LEFT JOIN student st ON r.user_id = st.student_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByreservationId" resultType="com.smart.www.pojo.Reservation">
+        SELECT
+        r.reservation_id,r.user_id,COALESCE(t.name, l.name, st.name) AS userName,s.staff_id,s.name AS
+        staffName,r.time,r.location
+        FROM
+        reservation r
+        JOIN staff s ON r.staff_id = s.staff_id
+        LEFT JOIN teacher t ON r.user_id = t.teacher_id
+        LEFT JOIN logistics l ON r.user_id = l.logistics_id
+        LEFT JOIN student st ON r.user_id = st.student_id
+        WHERE r.reservation_id like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByuserId" resultType="com.smart.www.pojo.Reservation">
+        SELECT
+        r.reservation_id,r.user_id,COALESCE(t.name, l.name, st.name) AS userName,s.staff_id,s.name AS
+        staffName,r.time,r.location
+        FROM
+        reservation r
+        JOIN staff s ON r.staff_id = s.staff_id
+        LEFT JOIN teacher t ON r.user_id = t.teacher_id
+        LEFT JOIN logistics l ON r.user_id = l.logistics_id
+        LEFT JOIN student st ON r.user_id = st.student_id
+        WHERE r.user_id like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchBystaffId" resultType="com.smart.www.pojo.Reservation">
+        SELECT
+        r.reservation_id,r.user_id,COALESCE(t.name, l.name, st.name) AS userName,s.staff_id,s.name AS
+        staffName,r.time,r.location
+        FROM
+        reservation r
+        JOIN staff s ON r.staff_id = s.staff_id
+        LEFT JOIN teacher t ON r.user_id = t.teacher_id
+        LEFT JOIN logistics l ON r.user_id = l.logistics_id
+        LEFT JOIN student st ON r.user_id = st.student_id
+        WHERE s.staff_id like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchBylocation" resultType="com.smart.www.pojo.Reservation">
+        SELECT
+        r.reservation_id,r.user_id,COALESCE(t.name, l.name, st.name) AS userName,s.staff_id,s.name AS
+        staffName,r.time,r.location
+        FROM
+        reservation r
+        JOIN staff s ON r.staff_id = s.staff_id
+        LEFT JOIN teacher t ON r.user_id = t.teacher_id
+        LEFT JOIN logistics l ON r.user_id = l.logistics_id
+        LEFT JOIN student st ON r.user_id = st.student_id
+        WHERE r.location like CONCAT('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+</mapper>

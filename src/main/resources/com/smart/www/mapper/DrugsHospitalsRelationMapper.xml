@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.DrugsHospitalsRelationMapper">
+
+    <resultMap id="BaseResultMap" type="com.smart.www.pojo.DrugsHospitalsRelation">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="relationType" column="relation_type" jdbcType="INTEGER"/>
+        <result property="typeId" column="type_id" jdbcType="INTEGER"/>
+        <result property="typeName" column="type_name" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,relation_type,type_id,
+        type_name,create_time,update_time
+    </sql>
+    <insert id="saveDrugsHospitalsRelation">
+        insert into drugs_relation (relation_type, type_id, type_name, create_time, update_time)
+        values (#{relation}, #{typeId}, #{typeName}, now(), now());
+    </insert>
+    <update id="updateHospitalsDrugsRelation">
+        update drugs_relation
+        set type_name   = #{typeName},
+            update_time = now()
+        where relation_type = #{relation}
+          and type_id = #{typeId};
+    </update>
+    <delete id="removeHospitalsDrugsById">
+        delete
+        from drugs_relation
+        where relation_type = #{relation}
+          and type_id = #{typeId};
+    </delete>
+    <select id="findDrugsRelationByValue" resultType="com.smart.www.pojo.DrugsHospitalsRelation">
+        select type_id   as typeId,
+               type_name as typeName
+        from drugs_relation
+        where relation_type = #{relation}
+          and type_name like concat('%', #{value}, '%')
+    </select>
+</mapper>

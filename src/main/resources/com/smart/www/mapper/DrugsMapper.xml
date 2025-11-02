@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.DrugsMapper">
+
+    <resultMap id="BaseResultMap" type="Drugs">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="drugId" column="drug_id" jdbcType="INTEGER"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="img" column="img" jdbcType="VARCHAR"/>
+        <result property="price" column="price" jdbcType="DECIMAL"/>
+        <result property="quantity" column="quantity" jdbcType="INTEGER"/>
+        <result property="specifications" column="specifications" jdbcType="VARCHAR"/>
+        <result property="type" column="type" jdbcType="INTEGER"/>
+        <result property="usage1" column="usage" jdbcType="VARCHAR"/>
+        <result property="dosage" column="dosage" jdbcType="VARCHAR"/>
+        <result property="manufacturer" column="manufacturer" jdbcType="VARCHAR"/>
+        <result property="expirationDate" column="expiration_date" jdbcType="VARCHAR"/>
+        <result property="symptoms" column="symptoms" jdbcType="VARCHAR"/>
+        <result property="notes" column="notes" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,drug_id,name,
+        price,quantity,specifications,
+        type,usage,dosage,
+        manufacturer,expiration_date,symptoms,
+        notes,create_time,update_time
+    </sql>
+    <insert id="insertDrugs">
+        insert into drugs
+        values (null,#{img}, #{drugId}, #{typeId}, #{name}, #{price}, #{quantity}, #{specifications}, #{usage1}, #{dosage},
+                #{manufacturer}, #{expirationDate}, #{symptoms}, #{notes}, now(), now())
+    </insert>
+    <update id="updateByDrugId">
+        update drugs
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="quantity != null">
+                quantity = #{quantity},
+            </if>
+            <if test="specifications != null">
+                specifications = #{specifications},
+            </if>
+            <if test="type != null">
+                `type` = #{type},
+            </if>
+            <if test="usage1 != null">
+                usage1 = #{usage1},
+            </if>
+            <if test="dosage != null">
+                dosage = #{dosage},
+            </if>
+            <if test="manufacturer != null">
+                manufacturer = #{manufacturer},
+            </if>
+            <if test="expirationDate != null">
+                expiration_date = #{expirationDate},
+            </if>
+            <if test="symptoms != null">
+                symptoms = #{symptoms},
+            </if>
+            <if test="notes != null">
+                notes = #{notes},
+            </if>
+            update_time = now()
+        </set>
+        where drug_id = #{drugId}
+    </update>
+    <delete id="deleteByDrugId">
+        delete
+        from drugs
+        where drug_id = #{did}
+
+    </delete>
+    <select id="findAllDrugs" resultType="com.smart.www.pojo.Drugs">
+        select drug_id,img ,name, price, quantity, specifications, d.type_name as type, usage1, dosage, manufacturer,
+        expiration_date, symptoms,d.create_time, d.update_time
+        from drugs
+        join drugs_relation d on drugs.type_id = d.type_id where d.relation_type = 1
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByName" resultType="com.smart.www.pojo.Drugs">
+        select drug_id, name, price, quantity, specifications, d.type_name as type, usage1, dosage, manufacturer,
+        expiration_date, symptoms, notes,d.create_time, d.update_time
+        from drugs
+        join drugs_relation d on drugs.type_id = d.type_id where d.relation_type = 1 and drugs.name like
+        concat('%',#{name},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByType" resultType="com.smart.www.pojo.Drugs">
+        select drug_id, name, price, quantity, specifications, d.type_name as type, usage1, dosage, manufacturer,
+        expiration_date, symptoms, notes,d.create_time, d.update_time
+        from drugs
+        join drugs_relation d on drugs.type_id = d.type_id where d.relation_type = 1 and drugs.name like
+        concat('%',#{type},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchDrugs" resultType="com.smart.www.pojo.Drugs">
+        select drug_id, name, price, quantity, specifications, d.type_name as type, usage1, dosage, manufacturer,
+        expiration_date, symptoms, notes,d.create_time, d.update_time
+        from drugs
+        join drugs_relation d on drugs.type_id = d.type_id
+        <where>
+            <if test="name != null">
+                AND drugs.name LIKE CONCAT('%', #{name}, '%') and d.relation_type = 1
+            </if>
+            <if test="type != null">
+                AND d.type_name LIKE CONCAT('%', #{type}, '%') and d.relation_type = 1
+            </if>
+            <if test="id != null">
+                AND drugs.drug_id LIKE CONCAT('%', #{id}, '%')
+            </if>
+            <if test="startTime != null and endTime !=null">
+                and drugs.create_time between #{startTime} and #{endTime}
+            </if>
+        </where>
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countDrugs" resultType="java.lang.Integer">
+        select
+        count(*)
+        from drugs
+        join drugs_relation d on drugs.type_id = d.type_id
+        <where>
+            <if test="name != null">
+                AND drugs.name LIKE CONCAT('%', #{name}, '%') and d.relation_type = 1
+            </if>
+            <if test="type != null">
+                AND d.type_name LIKE CONCAT('%', #{type}, '%') and d.relation_type = 1
+            </if>
+            <if test="id != null">
+                AND drugs.drug_id LIKE CONCAT('%', #{id}, '%')
+            </if>
+            <if test="startTime != null and endTime !=null">
+                and drugs.create_time between #{startTime} and #{endTime}
+            </if>
+        </where>
+    </select>
+</mapper>

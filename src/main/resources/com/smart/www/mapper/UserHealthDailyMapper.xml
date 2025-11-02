@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.UserHealthDailyMapper">
+
+    <resultMap id="BaseResultMap" type="com.smart.www.pojo.UserHealthDaily">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="VARCHAR"/>
+        <result property="date" column="date" jdbcType="DATE"/>
+        <result property="height" column="height" jdbcType="DECIMAL"/>
+        <result property="weight" column="weight" jdbcType="DECIMAL"/>
+        <result property="fatPercentage" column="fat_percentage" jdbcType="DECIMAL"/>
+        <result property="bmi" column="BMI" jdbcType="DECIMAL"/>
+        <result property="type" column="type" jdbcType="VARCHAR"/>
+        <result property="measureTime" column="measure_time" jdbcType="VARCHAR"/>
+        <result property="sleepTimeTotal" column="sleep_time_total" jdbcType="VARCHAR"/>
+        <result property="deepSleepTotal" column="deep_sleep_total" jdbcType="VARCHAR"/>
+        <result property="lightSleepTotal" column="light_sleep_total" jdbcType="VARCHAR"/>
+        <result property="wakeTimeTotal" column="wake_time_total" jdbcType="VARCHAR"/>
+        <result property="listSleepTime" column="list_sleep_time" jdbcType="VARCHAR"/>
+        <result property="todayWakeupTime" column="today_wakeup_time" jdbcType="VARCHAR"/>
+        <result property="step" column="step" jdbcType="VARCHAR"/>
+        <result property="walkingDistance" column="walking_distance" jdbcType="VARCHAR"/>
+        <result property="walkingTime" column="walking_time" jdbcType="VARCHAR"/>
+        <result property="calorie" column="calorie" jdbcType="VARCHAR"/>
+        <result property="meanRestingHeartRate" column="mean_resting_heart_rate" jdbcType="VARCHAR"/>
+        <result property="restingHeartRateMax" column="resting_heart_rate_max" jdbcType="VARCHAR"/>
+        <result property="restingHeartRateMin" column="resting_heart_rate_min" jdbcType="VARCHAR"/>
+        <result property="spo2" column="spo2" jdbcType="DECIMAL"/>
+        <result property="temperature" column="temperature" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+
+    <sql id="Base_Column_List">
+        id
+        ,user_id,date,
+        height,weight,fat_percentage,
+        BMI,type,measure_time,
+        sleep_time_total,deep_sleep_total,light_sleep_total,
+        wake_time_total,list_sleep_time,today_wakeup_time,
+        step,walking_distance,walking_time,
+        calorie,mean_resting_heart_rate,resting_heart_rate_max,
+        resting_heart_rate_min,spo2,temperature,
+        create_time,update_time
+    </sql>
+
+</mapper>

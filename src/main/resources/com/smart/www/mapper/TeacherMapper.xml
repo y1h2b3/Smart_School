@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.TeacherMapper">
+
+    <resultMap id="BaseResultMap" type="Teacher">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="type" column="type" jdbcType="VARCHAR"/>
+        <result property="deviceId" column="device_id" jdbcType="VARCHAR"/>
+        <result property="teacherId" column="teacher_id" jdbcType="INTEGER"/>
+        <result property="post" column="post" jdbcType="VARCHAR"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="phone" column="phone" jdbcType="VARCHAR"/>
+        <result property="sex" column="sex" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,type,device_id,
+        teacher_id,post,name,
+        username,password,phone,
+        sex,create_time,
+        update_time
+    </sql>
+    <update id="updateTeacher">
+        update teacher
+        <set>
+            <if test="type != null">
+                type=#{type},
+            </if>
+            <if test="deviceId != null">
+                device_id=#{deviceId},
+            </if>
+            <if test="teacherId != null">
+                teacher_id=#{teacherId},
+            </if>
+            <if test="post != null">
+                post=#{post},
+            </if>
+            <if test="name != null">
+                name=#{name},
+            </if>
+            <if test="password != null">
+                password=#{password},
+            </if>
+            <if test="phone != null">
+                phone=#{phone},
+            </if>
+            <if test="sex != null">
+                sex = #{sex},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="clazz != null">
+                clazz=#{clazz},
+            </if>
+            update_time = #{updateTime}
+        </set>
+        where teacher_id=#{teacherId}
+    </update>
+    <delete id="removeTeacherByTid">
+        delete
+        from teacher
+        where teacher_id = #{teacherId}
+    </delete>
+    <select id="findAllTeacher" resultType="com.smart.www.pojo.Teacher">
+        select device_id,img as image
+        ,teacher_id,post,name,clazz,birth,phone,sex,status,create_time,update_time,password from
+        teacher
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByName" resultType="com.smart.www.pojo.Teacher">
+        select device_id,img as image
+        ,teacher_id,post,name,clazz,birth,phone,sex,status,create_time,update_time,password from
+        teacher
+        where name like concat('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByType" resultType="com.smart.www.pojo.Teacher">
+        select device_id,img as image
+        ,teacher_id,post,name,clazz,birth,phone,sex,status,create_time,update_time,password from
+        teacher
+        where post like concat('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByTeacherId" resultType="com.smart.www.pojo.Teacher">
+        select device_id,img as image
+        ,teacher_id,post,name,clazz,birth,phone,sex,status,create_time,update_time,password from
+        teacher
+        where teacher_id like concat('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchBysex" resultType="com.smart.www.pojo.Teacher">
+        select device_id,img as image
+        ,teacher_id,post,name,clazz,birth,phone,sex,status,create_time,update_time,password from
+        teacher
+        where sex like concat('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByStatus" resultType="com.smart.www.pojo.Teacher">
+        select device_id,img as image
+        ,teacher_id,post,name,clazz,birth,phone,sex,status,create_time,update_time,password from
+        teacher
+        where status like concat('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countTeacher" resultType="java.lang.Integer">
+        SELECT count(*) FROM teacher
+        <where>
+            <if test="name != null">
+                and name like concat('%',#{name},'%')
+            </if>
+            <if test="post != null">
+                and post like concat('%',#{post},'%')
+            </if>
+            <if test="id != null">
+                and teacher_id like concat('%',#{id},'%')
+            </if>
+            <if test="phone != null">
+                AND s.phone = #{phone}
+            </if>
+        </where>
+    </select>
+    <select id="searchTeacher" resultType="com.smart.www.pojo.Teacher">
+        select device_id,img as image
+        ,teacher_id,post,name,clazz,birth,phone,sex,status,create_time,update_time,password from
+        teacher
+        <where>
+            <if test="name != null">
+                and name like concat('%',#{name},'%')
+            </if>
+            <if test="post != null">
+                and post like concat('%',#{post},'%')
+            </if>
+            <if test="id != null">
+                and teacher_id like concat('%',#{id},'%')
+            </if>
+            <if test="phone != null">
+                AND s.phone = #{phone}
+            </if>
+        </where>
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="findAllTeacher2" resultType="com.smart.www.pojo.Teacher">
+        select device_id,
+               img as image,
+               teacher_id,
+               post,
+               name,
+               clazz,
+               birth,
+               phone,
+               sex,
+               status,
+               create_time,
+               update_time,
+               password
+        from teacher;
+    </select>
+</mapper>

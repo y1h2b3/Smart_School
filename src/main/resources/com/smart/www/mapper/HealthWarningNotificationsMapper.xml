@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.HealthWarningNotificationsMapper">
+
+    <resultMap id="BaseResultMap" type="HealthWarningNotifications">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="notificationId" column="notification_id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="type" column="type" jdbcType="VARCHAR"/>
+        <result property="level" column="level" jdbcType="VARCHAR"/>
+        <result property="phone" column="phone" jdbcType="VARCHAR"/>
+        <result property="time" column="time" jdbcType="TIMESTAMP"/>
+        <result property="readingValue" column="reading_value" jdbcType="VARCHAR"/>
+        <result property="recommendedAction" column="recommended_action" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+        ,notification_id,user_id,
+        type,level,phone,
+        time,reading_value,recommended_action,
+        note,create_time,update_time
+    </sql>
+    <select id="findAllHealthWarningNotifications"
+            resultType="com.smart.www.pojo.Vo.StudentHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,COALESCE(t.type, l.type, st.type) AS usertype,COALESCE(t.name, l.name, st.name) AS
+        userName,h.user_id,
+        h.type,COALESCE(t.phone, l.phone, st.phone) AS
+        phone,h.level,h.time,h.reading_key,h.reading_value,h.recommended_action
+        FROM
+        health_warning_notifications h
+        LEFT JOIN teacher t ON h.user_id = t.teacher_id
+        LEFT JOIN logistics l ON h.user_id = l.logistics_id
+        LEFT JOIN student st ON h.user_id = st.student_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByUserName" resultType="com.smart.www.pojo.Vo.StudentHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,h.user_id,st.grade as userGrade,st.name AS userName,st.clazz AS userPost,
+        h.type,st.phone AS phone,h.level,st.sex,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN student st ON h.user_id = st.student_id
+        where st.name like concat('%',#{value},'%') and h.user_id = st.student_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByUserType" resultType="com.smart.www.pojo.Vo.StudentHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,h.user_id,st.grade as userGrade,st.name AS userName,st.clazz AS userPost,
+        h.type,st.phone AS phone,h.level,st.sex,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN student st ON h.user_id = st.student_id
+        where st.type like concat('%',#{value},'%') and h.user_id = st.student_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchBylevel" resultType="com.smart.www.pojo.Vo.StudentHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,h.user_id,st.grade as userGrade,st.name AS userName,st.clazz AS userPost,
+        h.type,st.phone AS phone,h.level,st.sex,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN student st ON h.user_id = st.student_id
+        where h.level like concat('%',#{value},'%') and h.user_id = st.student_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="findAllStudentHealthWarningNotifications"
+            resultType="com.smart.www.pojo.Vo.StudentHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,h.user_id,st.grade as userGrade,st.name AS userName,st.clazz AS userPost,
+        h.type,st.phone AS phone,h.level,st.sex,h.reading_key,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN student st ON h.user_id = st.student_id
+        where h.user_id = st.student_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="findAllTeacherHealthWarningNotifications"
+            resultType="com.smart.www.pojo.Vo.TeacherHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,h.user_id,t.post as userPost,t.name AS userName,h.type,t.sex,t.phone AS
+        phone,h.level,h.reading_key,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN teacher t ON h.user_id = t.teacher_id
+        where h.user_id = t.teacher_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchTeacherByUserName" resultType="com.smart.www.pojo.Vo.TeacherHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,h.user_id,t.post as userPost,t.name AS userName,h.type,t.sex,t.phone AS
+        phone,h.level,h.reading_key,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN teacher t ON h.user_id = t.teacher_id
+        where t.name like concat('%',#{value},'%') and h.user_id = t.teacher_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchTeachByUserType" resultType="com.smart.www.pojo.Vo.TeacherHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,h.user_id,t.post as userPost,t.name AS userName,h.type,t.sex,t.phone AS
+        phone,h.level,h.reading_key,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN teacher t ON h.user_id = t.teacher_id
+        where h.type like concat('%',#{value},'%') and h.user_id = t.teacher_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchTeachBylevel" resultType="com.smart.www.pojo.Vo.TeacherHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,h.user_id,t.post as userPost,t.name AS userName,h.type,t.sex,t.phone AS
+        phone,h.level,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN teacher t ON h.user_id = t.teacher_id
+        where h.level like concat('%',#{value},'%') and h.user_id = t.teacher_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchTeachByPost" resultType="com.smart.www.pojo.Vo.TeacherHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,h.user_id,t.post as userPost,t.name AS userName,h.type,t.sex,t.phone AS
+        phone,h.level,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN teacher t ON h.user_id = t.teacher_id
+        where t.post like concat('%',#{value},'%') and h.user_id = t.teacher_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="findAllLogisticsHealthWarningNotifications"
+            resultType="com.smart.www.pojo.Vo.LogisticsHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,l.sex,l.post as userPost,h.user_id,l.name AS userName,l.type AS userType,l.phone AS
+        phone,h.level,h.reading_key,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN logistics l ON h.user_id = l.logistics_id
+        where h.user_id = l.logistics_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchLogisticsByUserName" resultType="com.smart.www.pojo.Vo.LogisticsHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,l.sex,l.post as userPost,h.user_id,l.name AS userName,l.type AS userType,l.phone AS
+        phone,h.level,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN logistics l ON h.user_id = l.logistics_id
+        where l.name like concat('%',#{value},'%') and h.user_id = l.logistics_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+
+    </select>
+    <select id="searchLogisticsByUserType" resultType="com.smart.www.pojo.Vo.LogisticsHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,l.sex,l.post as userPost,h.user_id,l.name AS userName,l.type AS userType,l.phone AS
+        phone,h.level,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN logistics l ON h.user_id = l.logistics_id
+        where l.type like concat('%',#{value},'%') and h.user_id = l.logistics_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+
+    </select>
+    <select id="searchLogisticsBylevel" resultType="com.smart.www.pojo.Vo.LogisticsHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,l.sex,l.post as userPost,h.user_id,l.name AS userName,l.type AS userType,l.phone AS
+        phone,h.level,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN logistics l ON h.user_id = l.logistics_id
+        where h.level like concat('%',#{value},'%') and h.user_id = l.logistics_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchLogisticsByPost" resultType="com.smart.www.pojo.Vo.LogisticsHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,l.sex,l.post as userPost,h.user_id,l.name AS userName,l.type AS userType,l.phone AS
+        phone,h.level,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN logistics l ON h.user_id = l.logistics_id
+        where l.type like concat('%',#{value},'%') and h.user_id = l.logistics_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="findAllStudentHealthWarningNotifications2"
+            resultType="com.smart.www.pojo.Vo.StudentHealthWarningNotificationsVo">
+        SELECT h.notification_id,
+               h.user_id,
+               st.grade as userGrade,
+               st.name  AS userName,
+               st.clazz AS userPost,
+               h.type,
+               st.phone AS phone,
+               h.level,
+               st.sex,
+               h.reading_value,
+               h.recommended_action,
+               h.time
+        FROM health_warning_notifications h
+                 LEFT JOIN student st ON h.user_id = st.student_id
+        where h.user_id = st.student_id
+    </select>
+    <select id="findAllTeacherHealthWarningNotifications2"
+            resultType="com.smart.www.pojo.Vo.TeacherHealthWarningNotificationsVo">
+        SELECT h.notification_id,
+               h.user_id,
+               t.post  as userPost,
+               t.name  AS userName,
+               h.type,
+               t.sex,
+               t.phone AS phone,
+               h.level,
+               h.reading_key,
+               h.reading_value,
+               h.recommended_action,
+               h.time
+
+        FROM health_warning_notifications h
+                 LEFT JOIN teacher t ON h.user_id = t.teacher_id
+        where h.user_id = t.teacher_id
+    </select>
+    <select id="findAllLogisticsHealthWarningNotifications2"
+            resultType="com.smart.www.pojo.Vo.LogisticsHealthWarningNotificationsVo">
+        SELECT h.notification_id,
+               l.sex,
+               l.post  as userPost,
+               h.user_id,
+               l.name  AS userName,
+               l.type  AS userType,
+               l.phone AS phone,
+               h.level,
+               h.reading_key,
+               h.reading_value,
+               h.recommended_action,
+               h.time
+        FROM health_warning_notifications h
+                 LEFT JOIN logistics l ON h.user_id = l.logistics_id
+        where h.user_id = l.logistics_id
+    </select>
+    <select id="searchStudentHealthWarningNotifications"
+            resultType="com.smart.www.pojo.Vo.StudentHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,l.sex,l.clazz as userPost,h.user_id as userId,l.name AS userName,h.type AS type,l.phone
+        AS
+        phone,h.level,h.reading_key,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN student l ON h.user_id = l.student_id
+        <where>
+            and h.user_id = l.student_id
+            <if test="id!=null">
+                and h.user_id like concat('%',#{id},'%')
+            </if>
+            <if test="type!=null">
+                and h.level like concat('%',#{type},'%')
+            </if>
+            <if test="startTime != null and endTime != ''">
+                and h.time between #{startTime} and #{endTime}
+            </if>
+        </where>
+        order by h.time desc
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countStudentHealthWarningNotifications" resultType="java.lang.Integer">
+        SELECT
+        count(*)
+        FROM
+        health_warning_notifications h
+        LEFT JOIN student l ON h.user_id = l.student_id
+        <where>
+            and h.user_id = l.student_id
+            <if test="id!=null">
+                and h.user_id like concat('%',#{id},'%')
+            </if>
+            <if test="type!=null">
+                and h.level like concat('%',#{type},'%')
+            </if>
+            <if test="startTime != null and endTime != ''">
+                and h.time between #{startTime} and #{endTime}
+            </if>
+        </where>
+    </select>
+    <select id="countTeacherHealthWarningNotifications" resultType="java.lang.Integer">
+        SELECT
+        count(*)
+        FROM
+        health_warning_notifications h
+        LEFT JOIN teacher l ON h.user_id = l.teacher_id
+        <where>
+            and h.user_id = l.teacher_id
+            <if test="id!=null">
+                and h.user_id like concat('%',#{id},'%')
+            </if>
+            <if test="type!=null">
+                and h.level like concat('%',#{type},'%')
+            </if>
+            <if test="startTime != null and endTime != ''">
+                and h.time between #{startTime} and #{endTime}
+            </if>
+        </where>
+    </select>
+    <select id="searchTeacherHealthWarningNotifications"
+            resultType="com.smart.www.pojo.Vo.TeacherHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,l.sex,l.post as userPost,h.user_id as userId,l.name AS userName,l.type AS type,l.phone,
+        h.type AS phone,h.level,h.reading_key,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN teacher l ON h.user_id = l.teacher_id
+        <where>
+            and h.user_id = l.teacher_id
+            <if test="id!=null">
+                and h.user_id like concat('%',#{id},'%')
+            </if>
+            <if test="type!=null">
+                and h.level like concat('%',#{type},'%')
+            </if>
+            <if test="startTime != '' and startTime != null and endTime != '' and endTime != null">
+                and h.time between #{startTime} and #{endTime}
+            </if>
+        </where>
+        ORDER BY h.time desc
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchLogisticsHealthWarningNotifications"
+            resultType="com.smart.www.pojo.Vo.LogisticsHealthWarningNotificationsVo">
+        SELECT
+        h.notification_id,l.sex,l.post as userPost,h.user_id as userId,l.name AS userName,l.type AS type,l.phone
+        AS
+        phone,h.level,h.reading_key,h.reading_value,h.recommended_action,h.time
+        FROM
+        health_warning_notifications h
+        LEFT JOIN logistics l ON h.user_id = l.logistics_id
+        <where>
+            and h.user_id = l.logistics_id
+            <if test="id!=null">
+                and h.user_id like concat('%',#{id},'%')
+            </if>
+            <if test="type!=null">
+                and h.level like concat('%',#{type},'%')
+            </if>
+            <if test="startTime != null and endTime != ''">
+                and h.time between #{startTime} and #{endTime}
+            </if>
+        </where>
+        ORDER BY h.time desc
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countLogisticsHealthWarningNotifications" resultType="java.lang.Integer">
+        SELECT
+        count(*)
+        FROM
+        health_warning_notifications h
+        LEFT JOIN logistics l ON h.user_id = l.logistics_id
+        <where>
+            and h.user_id = l.logistics_id
+            <if test="id!=null">
+                and h.user_id like concat('%',#{id},'%')
+            </if>
+            <if test="type!=null">
+                and h.level like concat('%',#{type},'%')
+            </if>
+            <if test="startTime != null and endTime != ''">
+                and h.time between #{startTime} and #{endTime}
+            </if>
+        </where>
+    </select>
+    <select id="countTeacherAllhealthWarningNotifications" resultType="java.lang.Integer">
+        SELECT count(*)
+        FROM health_warning_notifications h
+                 LEFT JOIN teacher t ON h.user_id = t.teacher_id
+        where h.user_id = t.teacher_id
+    </select>
+    <select id="findAllStudentHealthWarningNotificationsById"
+            resultType="com.smart.www.pojo.HealthWarningNotifications">
+        select * from health_warning_notifications h LEFT JOIN student st ON h.user_id = st.student_id where h.user_id = #{userId}
+    </select>
+</mapper>

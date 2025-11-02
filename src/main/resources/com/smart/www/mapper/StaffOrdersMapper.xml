@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.StaffOrdersMapper">
+
+    <resultMap id="BaseResultMap" type="com.smart.www.pojo.StaffOrders">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="status" column="status" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,orders_id,staff_id,
+        user_id,status,create_time,
+        update_time
+    </sql>
+    <update id="updateStaffOrders">
+        update staff_orders
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+        where orders_id = #{ordersId}
+    </update>
+    <select id="findAllStaffOrders" resultType="com.smart.www.pojo.StaffOrders">
+        SELECT
+        s.orders_id as ordersId,s.user_id,COALESCE(t.name, l.name, st.name) as userName,sta.staff_id,
+        sta.name as staffName,sta.location,s.status as status,s.create_time as createTime,s.update_time as updateTime
+        FROM
+        staff_orders s
+        LEFT JOIN teacher t ON s.user_id = t.teacher_id
+        LEFT JOIN logistics l ON s.user_id = l.logistics_id
+        LEFT JOIN student st ON s.user_id = st.student_id
+        LEFT JOIN staff sta ON s.staff_id = sta.staff_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countStaffOrders" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM staff_orders s
+                 LEFT JOIN teacher t ON s.user_id = t.teacher_id
+                 LEFT JOIN logistics l ON s.user_id = l.logistics_id
+                 LEFT JOIN student st ON s.user_id = st.student_id
+                 LEFT JOIN staff sta ON s.staff_id = sta.staff_id
+    </select>
+    <select id="searchStaffOrders" resultType="com.smart.www.pojo.StaffOrders">
+        SELECT
+        s.orders_id as ordersId,s.user_id,COALESCE(t.name, l.name, st.name) as userName,sta.staff_id,
+        sta.name as staffName,sta.location,s.status as status,s.create_time as createTime,s.update_time as updateTime
+        FROM
+        staff_orders s
+        LEFT JOIN teacher t ON s.user_id = t.teacher_id
+        LEFT JOIN logistics l ON s.user_id = l.logistics_id
+        LEFT JOIN student st ON s.user_id = st.student_id
+        LEFT JOIN staff sta ON s.staff_id = sta.staff_id
+        <where>
+            <if test="name != null">
+                AND COALESCE(t.name, l.name, st.name,sta.name) LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="type != null">
+                AND s.status LIKE CONCAT('%', #{type}, '%')
+            </if>
+            <if test="id != null">
+                AND s.orders_id LIKE CONCAT('%', #{id}, '%')
+            </if>
+        </where>
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countSearchStaffOrders" resultType="java.lang.Integer">
+        SELECT
+        count(*)
+        FROM
+        staff_orders s
+        LEFT JOIN teacher t ON s.user_id = t.teacher_id
+        LEFT JOIN logistics l ON s.user_id = l.logistics_id
+        LEFT JOIN student st ON s.user_id = st.student_id
+        LEFT JOIN staff sta ON s.staff_id = sta.staff_id
+        <where>
+            <if test="name != null">
+                AND COALESCE(t.name, l.name, st.name) LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="type != null">
+                AND s.status LIKE CONCAT('%', #{type}, '%')
+            </if>
+            <if test="id != null">
+                AND s.orders_id LIKE CONCAT('%', #{id}, '%')
+            </if>
+
+        </where>
+    </select>
+    <select id="searchStaffOrdersLocation" resultType="com.smart.www.pojo.StaffOrders">
+        select location from staff where location = #{location}
+    </select>
+</mapper>

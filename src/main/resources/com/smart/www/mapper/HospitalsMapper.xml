@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.HospitalsMapper">
+
+    <resultMap id="BaseResultMap" type="Hospitals">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="hospitalId" column="hospital_id" jdbcType="INTEGER"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="address" column="address" jdbcType="VARCHAR"/>
+        <result property="phone" column="phone" jdbcType="VARCHAR"/>
+        <result property="grade" column="grade" jdbcType="VARCHAR"/>
+        <result property="type" column="type" jdbcType="VARCHAR"/>
+        <result property="medicalInsurance" column="medical_insurance" jdbcType="INTEGER"/>
+        <result property="note" column="note" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,hospital_id,name,
+        address,phone,grade,
+        type,medical_insurance,note,
+        create_time,update_time
+    </sql>
+    <update id="updateHospitals">
+        update hospitals
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="address != null">
+                address = #{address},
+            </if>
+            <if test="phone != null">
+                phone = #{phone},
+            </if>
+            <if test="grade != null">
+                grade = #{grade},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="medicalInsurance != null">
+                medical_insurance = #{medicalInsurance},
+            </if>
+            <if test="note != null">
+                note = #{note},
+            </if>
+            update_time = now()
+        </set>
+        where hospital_id = #{hospitalId}
+    </update>
+    <select id="searchByName" resultType="com.smart.www.pojo.Hospitals">
+        select hospital_id,name,
+        address,phone,grade,
+        type,medical_insurance,note
+        from hospitals
+        where name like concat('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByGrade" resultType="com.smart.www.pojo.Hospitals">
+        SELECT hospital_id, name, address, phone, d_grade.type_name AS grade, d_type.type_name AS type,
+        medical_insurance, note
+        FROM hospitals
+        JOIN drugs_hospitals_relation d_grade ON hospitals.grade = d_grade.type_id
+        JOIN drugs_hospitals_relation d_type ON hospitals.type = d_type.type_id
+        WHERE d_grade.relation_type = 2
+        AND d_type.relation_type = 3
+        where grade like concat('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="searchByType" resultType="com.smart.www.pojo.Hospitals">
+        SELECT hospital_id, name, address, phone, d_grade.type_name AS grade, d_type.type_name AS type,
+        medical_insurance, note
+        FROM hospitals
+        JOIN drugs_hospitals_relation d_grade ON hospitals.grade = d_grade.type_id
+        JOIN drugs_hospitals_relation d_type ON hospitals.type = d_type.type_id
+        WHERE d_grade.relation_type = 2
+        AND d_type.relation_type = 3
+        where type like concat('%',#{value},'%')
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="findAllHospitals" resultType="com.smart.www.pojo.Hospitals">
+        SELECT hospital_id, name, address, phone, d_grade.type_name AS grade, d_type.type_name AS type,
+        medical_insurance, note
+        FROM hospitals
+        JOIN drugs_hospitals_relation d_grade ON hospitals.grade = d_grade.type_id
+        JOIN drugs_hospitals_relation d_type ON hospitals.type = d_type.type_id
+        WHERE d_grade.relation_type = 2
+        AND d_type.relation_type = 3
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+</mapper>

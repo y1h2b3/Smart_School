@@ -1,0 +1,121 @@
+# 应用服务 WEB 访问端口
+server:
+  port: 8081
+
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant-path-matcher #2.6版本Spring MVC 处理映射匹配的默认策略已从AntPathMatcher更改为PathPatternParser
+
+  # 环境
+  profiles:
+    active: dev
+  main:
+    # 允许对象循环调用
+    allow-circular-references: true
+  application:
+    # 项目名称
+    name: SmartSchool
+  thymeleaf:
+    # 检查模板是否存在，然后再呈现
+    checkTemplate: true
+    # 模板编码
+    encoding: UTF-8
+    # 在构建 URL 时添加到视图名称前的前缀
+    prefix: classpath:/static/
+  # 配置数据库信息
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/smart_campus?characterEncoding=utf-8
+    username: root
+    password: 123456
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      jedis:
+        pool:
+          max-active: 200
+          max-idle: 10
+          min-idle: 0
+          max-wait: -1ms
+
+
+
+
+
+
+mybatis-plus:
+  # 指定mybatis-plus的实体目录
+  typeAliasesPackage: com.smart.www.pojo
+  # 指定mybatis-plus的mapper文件
+  mapperLocations: classpath:com/smark/www/mapper/*.xml
+  configuration:
+    # 开启驼峰命名
+    mapUnderscoreToCamelCase: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 是否开启二级缓存
+    cacheEnabled: false
+  globalConfig:
+    dbConfig:
+      # id为雪花算法生成
+      idType: assign_id
+
+
+# Knife4j 配置信息  --- 这是将接口自动转成一个文档 可以不要
+knife4j:
+  # 是否开启Knife4j
+  enable: true
+  openapi:
+    # 接口文档标题
+    title: 用户管理接口文档
+    # 接口文档描述
+    description: 用户管理接口文档
+    # 联系邮箱
+    email: 208925256@qq.com
+    # 联系人
+    concat: 胡峰
+    # 接口文档URL
+    url: http://www.smart.cn
+    # 版本号
+    version: v1.0.0
+    # 默认分组名称
+    group:
+      default:
+        # 组名
+        group-name: default
+        # API规则
+        api-rule: package
+        # API规则资源
+        api-rule-resources: top.luckycat.www.controller
+
+# disposition SpringBoot Swagger
+# Configure the access path for the swagger document,Access address: http://127.0.0.1:8080/swagger-ui.html
+springdoc:
+  swagger-ui.path: /swagger-ui.html
+# Logger Config
+logging:
+  level:
+    com.hexadecimal: debug
+
+sa-token:
+  # token 名称（同时也是 cookie 名称）
+  token-name: satoken
+  # token 有效期（单位：秒） 默认30天，-1 代表永久有效
+  timeout: 2592000
+  # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
+  active-timeout: -1
+  # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
+  is-concurrent: true
+  # 在多人登录同一账号时，是否共用一个 token （为 true 时所有登录共用一个 token, 为 false 时每次登录新建一个 token）
+  is-share: true
+  # token 风格（默认可取值：uuid、simple-uuid、random-32、random-64、random-128、tik）
+  token-style: uuid
+  # 是否输出操作日志
+  is-log: true
+
+
+
+
+

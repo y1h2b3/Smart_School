@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.www.mapper.UserHealthMapper">
+
+    <resultMap id="BaseResultMap" type="UserHealth">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="type" column="type" jdbcType="INTEGER"/>
+        <result property="height" column="height" jdbcType="DECIMAL"/>
+        <result property="weight" column="weight" jdbcType="DECIMAL"/>
+        <result property="step" column="step" jdbcType="INTEGER"/>
+        <result property="spo2" column="spo2" jdbcType="DECIMAL"/>
+        <result property="calorie" column="calorie" jdbcType="INTEGER"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,user_id,type,
+        height,weight,sleep_time,
+        step,heart_rate,spo2,
+        calorie,create_time,update_time
+    </sql>
+
+    <select id="findStudentUserHealth" resultType="com.smart.www.pojo.UserHealth">
+        SELECT
+        st.student_id as userId,st.name AS userName,st.clazz as postOrClazz,
+        u.height,u.weight,u.fat_percentage,u.BMI,u.type,u.measure_time,u.sleep_time_total,u.deep_sleep_total,u.light_sleep_total,
+        u.wake_time_total,u.list_sleep_time,u.today_wakeup_time,u.step,u.walking_distance,u.walking_time,u.calorie,u.mean_resting_heart_rate,
+        u.resting_heart_rate_max,u.resting_heart_rate_min,u.spo2,u.temperature
+        FROM
+        user_health u
+        LEFT JOIN student st ON u.user_id = st.student_id
+        where u.user_id = st.student_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="findTeacherUserHealth" resultType="com.smart.www.pojo.UserHealth">
+        SELECT
+        st.teacher_id as userId,st.name AS userName,st.post as postOrClazz,
+        u.height,u.weight,u.fat_percentage,u.BMI,u.type,u.measure_time,u.sleep_time_total,u.deep_sleep_total,u.light_sleep_total,
+        u.wake_time_total,u.list_sleep_time,u.today_wakeup_time,u.step,u.walking_distance,u.walking_time,u.calorie,u.mean_resting_heart_rate,
+        u.resting_heart_rate_max,u.resting_heart_rate_min,u.spo2,u.temperature
+        FROM
+        user_health u
+        LEFT JOIN teacher st ON u.user_id = st.teacher_id
+        where u.user_id = st.teacher_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="findLogisticsUserHealth" resultType="com.smart.www.pojo.UserHealth">
+        SELECT
+        st.logistics_id as userId,st.name AS userName,st.post as postOrClazz,
+        u.height,u.weight,u.fat_percentage,u.BMI,u.type,u.measure_time,u.sleep_time_total,u.deep_sleep_total,u.light_sleep_total,
+        u.wake_time_total,u.list_sleep_time,u.today_wakeup_time,u.step,u.walking_distance,u.walking_time,u.calorie,u.mean_resting_heart_rate,
+        u.resting_heart_rate_max,u.resting_heart_rate_min,u.spo2,u.temperature
+        FROM
+        user_health u
+        LEFT JOIN logistics st ON u.user_id = st.logistics_id
+        where u.user_id = st.logistics_id
+        <if test="orders != null">
+            ORDER BY ${orders}
+            <if test="isAsc">
+                ASC
+            </if>
+            <if test="!isAsc">
+                DESC
+            </if>
+        </if>
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countStudentUserHealthType" resultType="java.lang.Integer">
+        select count(*)FROM
+        user_health u
+        LEFT JOIN student st ON u.user_id = st.student_id
+        <where>
+            u.user_id = st.student_id
+            <if test="id != null">
+                and st.student_id like concat('%',#{id},'%')
+            </if>
+            <if test="name != null">
+                and st.name like concat('%',#{name},'%')
+            </if>
+        </where>
+    </select>
+    <select id="searchStudentUserHealthType1" resultType="com.smart.www.pojo.UserHealth">
+        SELECT
+        student.student_id as userId, student.name AS userName, student.clazz as postOrClazz,
+        u.height, u.weight, u.fat_percentage, u.BMI, u.type, u.measure_time, u.sleep_time_total, u.deep_sleep_total,
+        u.light_sleep_total,
+        u.wake_time_total, u.list_sleep_time, u.today_wakeup_time, u.step, u.walking_distance, u.walking_time,
+        u.calorie, u.mean_resting_heart_rate,
+        u.resting_heart_rate_max, u.resting_heart_rate_min, u.spo2, u.temperature
+        FROM
+        user_health u
+        LEFT JOIN student ON u.user_id = student.student_id
+        <where>
+            u.user_id = student.student_id
+            <if test="id != null">
+                and student.student_id like concat('%',#{id},'%')
+            </if>
+            <if test="name != null">
+                and student.name like concat('%',#{name},'%')
+            </if>
+        </where>
+        order by u.measure_time desc
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="searchTeacherUserHealthType1" resultType="com.smart.www.pojo.UserHealth">
+        SELECT
+        st.teacher_id as userId,st.name AS userName,st.post as postOrClazz,
+        u.height,u.weight,u.fat_percentage,u.BMI,u.type,u.measure_time,u.sleep_time_total,u.deep_sleep_total,u.light_sleep_total,
+        u.wake_time_total,u.list_sleep_time,u.today_wakeup_time,u.step,u.walking_distance,u.walking_time,u.calorie,u.mean_resting_heart_rate,
+        u.resting_heart_rate_max,u.resting_heart_rate_min,u.spo2,u.temperature
+        FROM
+        user_health u
+        LEFT JOIN teacher st ON u.user_id = st.teacher_id
+        <where>
+            u.user_id = st.teacher_id
+            <if test="id != null">
+                and st.teacher_id like concat('%',#{id},'%')
+            </if>
+            <if test="name != null">
+                and st.name like concat('%',#{name},'%')
+            </if>
+        </where>
+        order by u.measure_time desc
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="countTeacherUserHealthType" resultType="java.lang.Integer">
+        select count(*)FROM
+        user_health u
+        LEFT JOIN teacher st ON u.user_id = st.teacher_id
+        <where>
+            u.user_id = st.teacher_id
+            <if test="id != null">
+                and st.teacher_id like concat('%',#{id},'%')
+            </if>
+            <if test="name != null">
+                and st.name like concat('%',#{name},'%')
+            </if>
+        </where>
+    </select>
+    <select id="searchLogisticsUserHealthType1" resultType="com.smart.www.pojo.UserHealth">
+        SELECT
+        st.logistics_id as userId,st.name AS userName,st.post as postOrClazz,
+        u.height,u.weight,u.fat_percentage,u.BMI,u.type,u.measure_time,u.sleep_time_total,u.deep_sleep_total,u.light_sleep_total,
+        u.wake_time_total,u.list_sleep_time,u.today_wakeup_time,u.step,u.walking_distance,u.walking_time,u.calorie,u.mean_resting_heart_rate,
+        u.resting_heart_rate_max,u.resting_heart_rate_min,u.spo2,u.temperature
+        FROM
+        user_health u
+        LEFT JOIN logistics st ON u.user_id = st.logistics_id
+        <where>
+            u.user_id = st.logistics_id
+            <if test="id != null">
+                and st.logistics_id like concat('%',#{id},'%')
+            </if>
+            <if test="name != null">
+                and st.name like concat('%',#{name},'%')
+            </if>
+        </where>
+        order by u.measure_time desc
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="countLogisticsUserHealthType" resultType="java.lang.Integer">
+        select count(*)FROM
+        user_health u
+        LEFT JOIN logistics st ON u.user_id = st.logistics_id
+        <where>
+            u.user_id = st.logistics_id
+            <if test="id != null">
+                and st.logistics_id like concat('%',#{id},'%')
+            </if>
+            <if test="name != null">
+                and st.name like concat('%',#{name},'%')
+            </if>
+        </where>
+    </select>
+    <select id="searchIdUserHealthType" resultType="com.smart.www.pojo.UserHealth">
+        SELECT
+            u.height,u.weight,u.fat_percentage,u.BMI,u.type,u.measure_time,u.sleep_time_total,u.deep_sleep_total,u.light_sleep_total,
+            u.wake_time_total,u.list_sleep_time,u.today_wakeup_time,u.step,u.walking_distance,u.walking_time,u.calorie,u.mean_resting_heart_rate,
+            u.resting_heart_rate_max,u.resting_heart_rate_min,u.spo2,u.temperature
+        FROM
+            user_health u
+        where u.user_id = #{uid}
+    </select>
+    <select id="getUserHealthByTime" resultType="UserHealth">
+        select *
+        from user_health
+        where
+            user_id = #{userId} and
+            measure_time like concat('%', #{time}, '%')
+    </select>
+</mapper>
