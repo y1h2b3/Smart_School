@@ -54,6 +54,21 @@ public class Orders implements Serializable {
     @TableField(value = "order_status")
     private String orderStatus;
     /**
+     * 支付方式：alipay-支付宝, wxpay-微信, bank-网银, jdpay-京东
+     */
+    @TableField(value = "payment_type")
+    private String paymentType;
+    /**
+     * 平台订单号（书杰支付返回的trade_no）
+     */
+    @TableField(value = "platform_trade_no")
+    private String platformTradeNo;
+    /**
+     * 接口订单号（微信/支付宝返回的单号）
+     */
+    @TableField(value = "api_trade_no")
+    private String apiTradeNo;
+    /**
      * 数量
      */
     @TableField(value = "quantity")
@@ -73,5 +88,10 @@ public class Orders implements Serializable {
      */
     @TableField(value = "update_time")
     private Date updateTime;
+
+    /**
+     * 药品名称（关联查询时使用，非orders表字段）
+     */
+    @TableField(exist = false)
     private String drugName;
 }

@@ -29,7 +29,7 @@
         where order_id = #{orderId}
     </update>
     <select id="findAllOrders" resultType="com.smart.www.pojo.Orders">
-        select o.order_id,o.user_id,d.name as drugName,o.time,o.price,o.quantity,o.total_price,o.order_status
+        select o.order_id,o.user_id,d.drug_name as drugName,o.time,o.price,o.quantity,o.total_price,o.order_status
         from orders o
         join drugs d on d.drug_id = o.drug_id
         <if test="orders != null">
@@ -44,10 +44,10 @@
         limit #{size} offset #{offset}
     </select>
     <select id="searchByName" resultType="com.smart.www.pojo.Orders">
-        select o.order_id,o.user_id,d.name as drugName,o.time,o.price,o.quantity,o.total_price
+        select o.order_id,o.user_id,d.drug_name as drugName,o.time,o.price,o.quantity,o.total_price
         from orders o
         join drugs d on d.drug_id = o.drug_id
-        where d.name like CONCAT('%',#{value},'%')
+        where d.drug_name like CONCAT('%',#{value},'%')
         <if test="orders != null">
             ORDER BY ${orders}
             <if test="isAsc">
@@ -60,7 +60,7 @@
         limit #{size} offset #{offset}
     </select>
     <select id="searchByordersId" resultType="com.smart.www.pojo.Orders">
-        select o.order_id,o.user_id,d.name as drugName,o.time,o.price,o.quantity,o.total_price
+        select o.order_id,o.user_id,d.drug_name as drugName,o.time,o.price,o.quantity,o.total_price
         from orders o
         join drugs d on d.drug_id = o.drug_id
         where o.order_id like CONCAT('%',#{value},'%')
@@ -76,7 +76,7 @@
         limit #{size} offset #{offset}
     </select>
     <select id="searchBystudentId" resultType="com.smart.www.pojo.Orders">
-        select o.order_id,o.user_id,d.name as drugName,o.time,o.price,o.quantity,o.total_price
+        select o.order_id,o.user_id,d.drug_name as drugName,o.time,o.price,o.quantity,o.total_price
         from orders o
         join drugs d on d.drug_id = o.drug_id
         where o.user_id like CONCAT('%',#{value},'%')
@@ -92,8 +92,8 @@
         limit #{size} offset #{offset}
     </select>
     <select id="searchOrders" resultType="com.smart.www.pojo.Orders">
-        select o.order_id,o.user_id,d.name as drugName,o.time,o.price,o.quantity,o.total_price,o.order_status as
-        orderStatus
+        select o.order_id,o.user_id,d.drug_name as drugName,o.time,o.price,o.quantity,o.total_price,o.order_status as
+        orderStatus,o.create_time as createTime,o.update_time as updateTime
         from orders o
         join drugs d on d.drug_id = o.drug_id
         <where>

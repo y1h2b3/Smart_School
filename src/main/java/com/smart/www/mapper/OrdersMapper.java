@@ -25,7 +25,7 @@ public interface OrdersMapper extends BaseMapper<Orders> {
 
     List<Orders> searchByName(@Param("size") int size, @Param("offset") int offset, @Param("orders") String orders, @Param("isAsc") Boolean isAsc, @Param("value") String value);
 
-    @Select("select count(d.name) from orders o join drugs d on d.drug_id = o.drug_id")
+    @Select("select count(d.drug_name) from orders o join drugs d on d.drug_id = o.drug_id")
     int countordersByName(String value);
 
     List<Orders> searchByordersId(@Param("size") int size, @Param("offset") int offset, @Param("orders") String orders, @Param("isAsc") Boolean isAsc, @Param("value") String value);
@@ -48,7 +48,7 @@ public interface OrdersMapper extends BaseMapper<Orders> {
 
     int countOrders(@Param("oid") String oid, @Param("uid") String uid, @Param("type") String type,@Param("startTime")String startTime, @Param("endTime")String endTime);
 
-    @Select("select name from drugs where drug_id = #{donaDrugId}")
+    @Select("select drug_name from drugs where drug_id = #{donaDrugId}")
     String findID(String donaDrugId);
 
 }
