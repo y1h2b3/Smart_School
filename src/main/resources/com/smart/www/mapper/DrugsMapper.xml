@@ -7,7 +7,7 @@
     <resultMap id="BaseResultMap" type="Drugs">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="drugId" column="drug_id" jdbcType="INTEGER"/>
-        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="name" column="drug_name" jdbcType="VARCHAR"/>
         <result property="img" column="img" jdbcType="VARCHAR"/>
         <result property="price" column="price" jdbcType="DECIMAL"/>
         <result property="quantity" column="quantity" jdbcType="INTEGER"/>
@@ -25,7 +25,7 @@
 
     <sql id="Base_Column_List">
         id
-        ,drug_id,name,
+        ,drug_id,drug_name,
         price,quantity,specifications,
         type,usage,dosage,
         manufacturer,expiration_date,symptoms,
@@ -40,7 +40,7 @@
         update drugs
         <set>
             <if test="name != null">
-                name = #{name},
+                drug_name = #{name},
             </if>
             <if test="price != null">
                 price = #{price},
@@ -83,7 +83,8 @@
 
     </delete>
     <select id="findAllDrugs" resultType="com.smart.www.pojo.Drugs">
-        select drug_id,img ,name, price, quantity, specifications, d.type_name as type, usage1, dosage, manufacturer,
+        select drug_id,img ,drug_name as name, price, quantity, specifications, d.type_name as type, usage1, dosage,
+        manufacturer,
         expiration_date, symptoms,d.create_time, d.update_time
         from drugs
         join drugs_relation d on drugs.type_id = d.type_id where d.relation_type = 1
@@ -99,10 +100,11 @@
         limit #{size} offset #{offset}
     </select>
     <select id="searchByName" resultType="com.smart.www.pojo.Drugs">
-        select drug_id, name, price, quantity, specifications, d.type_name as type, usage1, dosage, manufacturer,
+        select drug_id, drug_name as name, price, quantity, specifications, d.type_name as type, usage1, dosage,
+        manufacturer,
         expiration_date, symptoms, notes,d.create_time, d.update_time
         from drugs
-        join drugs_relation d on drugs.type_id = d.type_id where d.relation_type = 1 and drugs.name like
+        join drugs_relation d on drugs.type_id = d.type_id where d.relation_type = 1 and drugs.drug_name like
         concat('%',#{name},'%')
         <if test="orders != null">
             ORDER BY ${orders}
@@ -116,10 +118,11 @@
         limit #{size} offset #{offset}
     </select>
     <select id="searchByType" resultType="com.smart.www.pojo.Drugs">
-        select drug_id, name, price, quantity, specifications, d.type_name as type, usage1, dosage, manufacturer,
+        select drug_id, drug_name as name, price, quantity, specifications, d.type_name as type, usage1, dosage,
+        manufacturer,
         expiration_date, symptoms, notes,d.create_time, d.update_time
         from drugs
-        join drugs_relation d on drugs.type_id = d.type_id where d.relation_type = 1 and drugs.name like
+        join drugs_relation d on drugs.type_id = d.type_id where d.relation_type = 1 and drugs.drug_name like
         concat('%',#{type},'%')
         <if test="orders != null">
             ORDER BY ${orders}
@@ -133,13 +136,14 @@
         limit #{size} offset #{offset}
     </select>
     <select id="searchDrugs" resultType="com.smart.www.pojo.Drugs">
-        select drug_id, name, price, quantity, specifications, d.type_name as type, usage1, dosage, manufacturer,
+        select drug_id, drug_name as name, price, quantity, specifications, d.type_name as type, usage1, dosage,
+        manufacturer,
         expiration_date, symptoms, notes,d.create_time, d.update_time
         from drugs
         join drugs_relation d on drugs.type_id = d.type_id
         <where>
             <if test="name != null">
-                AND drugs.name LIKE CONCAT('%', #{name}, '%') and d.relation_type = 1
+                AND drugs.drug_name LIKE CONCAT('%', #{name}, '%') and d.relation_type = 1
             </if>
             <if test="type != null">
                 AND d.type_name LIKE CONCAT('%', #{type}, '%') and d.relation_type = 1
@@ -169,7 +173,7 @@
         join drugs_relation d on drugs.type_id = d.type_id
         <where>
             <if test="name != null">
-                AND drugs.name LIKE CONCAT('%', #{name}, '%') and d.relation_type = 1
+                AND drugs.drug_name LIKE CONCAT('%', #{name}, '%') and d.relation_type = 1
             </if>
             <if test="type != null">
                 AND d.type_name LIKE CONCAT('%', #{type}, '%') and d.relation_type = 1

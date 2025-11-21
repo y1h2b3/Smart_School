@@ -36,7 +36,7 @@ public class Drugs implements Serializable {
     /**
      * 药品名字
      */
-    @TableField(value = "name")
+    @TableField(value = "drug_name")
     private String name;
     /**
      * 价格

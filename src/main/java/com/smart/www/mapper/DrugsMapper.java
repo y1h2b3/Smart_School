@@ -26,7 +26,7 @@ public interface DrugsMapper extends BaseMapper<Drugs> {
     @Select("select count(*) from drugs")
     int countAllDrugs();
 
-    @Select("select count(*) from drugs where name like concat('%',#{name},'%')")
+    @Select("select count(*) from drugs where drug_name like concat('%',#{name},'%')")
     int countDrugsByName(@Param("name") String name);
 
     @Select("select count(*) from drugs join drugs_type on drugs.type = drugs_type.id and drugs_type.drugs_name like concat('%',#{type},'%')")
@@ -43,7 +43,7 @@ public interface DrugsMapper extends BaseMapper<Drugs> {
 
     int countDrugs(@Param("id") String id, @Param("name") String name, @Param("type") String type, @Param("startTime") String startTime, @Param("endTime") String endTime);
 
-    @Select("select name from drugs where drug_id = #{id}")
+    @Select("select drug_name as name from drugs where drug_id = #{id}")
     List<Drugs> searchIdDrugs(String id);
 
     @Select("select type_id from drugs_relation where type_name = #{name}")
