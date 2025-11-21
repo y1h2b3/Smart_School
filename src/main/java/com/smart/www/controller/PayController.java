@@ -13,10 +13,7 @@ import com.smart.www.service.OrdersService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -38,9 +35,9 @@ public class PayController {
     //签名方式
     private final String SIGN_TYPE = "RSA2";
     //支付宝异步通知路径,付款完毕后会异步调用本项目的方法,必须为公网地址
-    private final String NOTIFY_URL = "http://v2443f69.natappfree.cc";
+    private final String NOTIFY_URL = "http://v2443f69.natappfree.cc/pay/notify";
     //支付宝同步通知路径,也就是当付款完毕后跳转本项目的页面,可以不是公网地址
-    private final String RETURN_URL = "http://localhost:8081/nofity";
+    private final String RETURN_URL = "http://localhost:8081/pay/return";
     @Autowired
     private OrdersService orderService;
     @Autowired
@@ -55,24 +52,29 @@ public class PayController {
                          @RequestParam(value = "dona_sum") int dona_sum,
                          @RequestParam(value = "dona_userId") String dona_userId) throws AlipayApiException {
 
-        Page<Drugs> drugsPage = drugsService.searchDrugs(new PageQuery(),  dona_drugId, null, null, null, null);
+        Page<Drugs> drugsPage = drugsService.searchDrugs(new PageQuery(), dona_drugId, null, null, null, null);
         String name = drugsPage.getRecords().get(0).getName();
+
         //生成订单号（支付宝的要求）
         String time = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
         String user = UUID.randomUUID().toString().replace("-", "").toUpperCase();
+        String OrderNum = time + user;  // 完整订单号
 
-        //把dona_id项目id 放在session中
+        //计算总金额（不要修改原始单价）
+        float totalAmount = dona_money * dona_sum;
+
+        //把订单信息放在session中（用于回调）
         session.setAttribute("dona_userId", dona_userId);
-        session.setAttribute("dona_money", dona_money);
+        session.setAttribute("dona_unit_price", dona_money);  // 保存单价
         session.setAttribute("dona_drugId", dona_drugId);
         session.setAttribute("dona_sum", dona_sum);
-        session.setAttribute("dona_id", user);
+        session.setAttribute("dona_order_id", OrderNum);  // 保存完整订单号
         session.setAttribute("dona_name", name);
+
         String dona_name = orderService.findID(dona_drugId);
-        String OrderNum = time + user;
-        dona_money = dona_money * dona_sum;
+
         //调用封装好的方法（给支付宝接口发送请求）
-        return sendRequestToAlipay(OrderNum, dona_money, dona_name,name);
+        return sendRequestToAlipay(OrderNum, totalAmount, dona_name, name);
     }
 
     /*
@@ -103,29 +105,101 @@ public class PayController {
         return result;
     }
 
-    @GetMapping("nofity")
-    public String notify(HttpSession session) {
-        System.out.println("支付成功");
-        //获得项目id
-        String dona_id = (String) session.getAttribute("dona_id");
+    @GetMapping("/pay/return")
+    public String payReturn(HttpSession session) {
+        System.out.println("支付成功回调");
+
+        //从session获取订单信息
+        String orderId = (String) session.getAttribute("dona_order_id");
         String dona_userId = (String) session.getAttribute("dona_userId");
         String dona_drugId = (String) session.getAttribute("dona_drugId");
-        float dona_money = (float) session.getAttribute("dona_money");
+        Float unitPrice = (Float) session.getAttribute("dona_unit_price");  // 获取单价
         Integer dona_sum = (Integer) session.getAttribute("dona_sum");
-        //调用service层的方法
+
+        // 验证必要参数
+        if (orderId == null || dona_userId == null || unitPrice == null) {
+            System.err.println("Session数据丢失，无法创建订单");
+            return "redirect:http://localhost:5173/index?error=session_lost";
+        }
+
+        // 检查订单是否已存在（防止重复创建）
+        Orders existOrder = orderService.getOne(
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Orders>()
+                        .eq("order_id", orderId)
+        );
+
+        if (existOrder != null) {
+            System.out.println("订单已存在，订单号: " + orderId);
+            // 清除session
+            clearPaymentSession(session);
+            return "redirect:http://localhost:5173/store-buy?paymentSuccess=true";
+        }
+
+        //创建订单
         Orders orders = new Orders();
-        orders.setOrderId(dona_id);
+        orders.setOrderId(orderId);  // 使用完整订单号
         orders.setUserId(dona_userId);
         orders.setDrugId(dona_drugId);
-        orders.setPrice(BigDecimal.valueOf(dona_money));
+        orders.setPrice(BigDecimal.valueOf(unitPrice));  // 单价
         orders.setQuantity(dona_sum);
+        orders.setTotalPrice(BigDecimal.valueOf(unitPrice * dona_sum));  // 总价 = 单价 × 数量
         orders.setTime(new Date());
-        orders.setTotalPrice(BigDecimal.valueOf(dona_money * dona_sum));
         orders.setCreateTime(new Date());
         orders.setUpdateTime(new Date());
         orders.setOrderStatus("已支付");
-        orderService.save(orders);
-        return "redirect:http://localhost:5173/index";
+        orders.setPaymentType("alipay");  // 设置支付方式
+
+        boolean saved = orderService.save(orders);
+
+        if (saved) {
+            System.out.println("订单创建成功: " + orderId);
+            // 清除session
+            clearPaymentSession(session);
+            return "redirect:http://localhost:5173/store-buy?paymentSuccess=true";
+        } else {
+            System.err.println("订单创建失败");
+            return "redirect:http://localhost:5173/store-buy?paymentSuccess=false";
+        }
+    }
+
+    /**
+     * 异步回调接口（支付宝后台调用）
+     */
+    @PostMapping("/pay/notify")
+    @ResponseBody
+    public String notifyAsync(@RequestParam("out_trade_no") String outTradeNo,
+                              @RequestParam("trade_status") String tradeStatus) {
+        System.out.println("支付宝异步回调: 订单号=" + outTradeNo + ", 状态=" + tradeStatus);
+
+        // 只处理支付成功的通知
+        if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
+            // 检查订单是否已存在
+            Orders existOrder = orderService.getOne(
+                    new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Orders>()
+                            .eq("order_id", outTradeNo)
+            );
+
+            if (existOrder != null) {
+                System.out.println("订单已存在，无需重复创建");
+                return "success";  // 返回 success 告诉支付宝收到通知
+            }
+
+            System.out.println("异步回调无法创建订单（缺少详细信息），订单已由同步回调创建");
+        }
+
+        return "success";
+    }
+
+    /**
+     * 清除支付相关的Session数据
+     */
+    private void clearPaymentSession(HttpSession session) {
+        session.removeAttribute("dona_order_id");
+        session.removeAttribute("dona_userId");
+        session.removeAttribute("dona_drugId");
+        session.removeAttribute("dona_unit_price");
+        session.removeAttribute("dona_sum");
+        session.removeAttribute("dona_name");
     }
 
 }
