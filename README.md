@@ -7,7 +7,7 @@
 ![MyBatis-Plus](https://img.shields.io/badge/MyBatis--Plus-3.5.5-blue.svg)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 
-一个功能完善的智慧校园综合管理平台后端系统
+一个功能完善的智慧校园综合管理平台后端系统.
 
 </div>
 
