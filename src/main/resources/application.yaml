@@ -40,13 +40,14 @@ spring:
           max-idle: 10
           min-idle: 0
           max-wait: -1ms
-  #ai
+  #ai - Spring AI Alibaba 官方配置
   ai:
     dashscope:
       api-key: sk-a8eb06b45ae64eef9299056d854a092a
       chat:
         options:
           model: qwen-plus
+          temperature: 0.7
 
 
 
