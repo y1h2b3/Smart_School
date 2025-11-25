@@ -61,7 +61,7 @@ mybatis-plus:
   configuration:
     # 开启驼峰命名
     mapUnderscoreToCamelCase: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
     # 是否开启二级缓存
     cacheEnabled: false
   globalConfig:
