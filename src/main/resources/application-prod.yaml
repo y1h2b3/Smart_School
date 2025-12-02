@@ -1,78 +1,41 @@
 # ============================================
-# Smart Campus 配置文件
+# 生产环境配置文件
 # ============================================
-# 所有配置统一在此文件中管理
-# 敏感信息通过环境变量配置（参考 .env.example）
+# 使用方式: java -jar xxx.jar --spring.profiles.active=prod
 # ============================================
 
 # ==================== 服务器配置 ====================
 server:
-  port: ${SERVER_PORT:8718}
+  port: 8718
 
 # ==================== Spring 配置 ====================
 spring:
-  mvc:
-    pathmatch:
-      # 2.6版本Spring MVC 处理映射匹配的默认策略已从AntPathMatcher更改为PathPatternParser
-      matching-strategy: ant-path-matcher
-  
-  main:
-    # 允许对象循环调用
-    allow-circular-references: true
-  
-  application:
-    # 项目名称
-    name: SmartSchool
-  
-  thymeleaf:
-    # 检查模板是否存在，然后再呈现
-    check-template: true
-    # 模板编码
-    encoding: UTF-8
-    # 在构建 URL 时添加到视图名称前的前缀
-    prefix: classpath:/static/
-  
   # ==================== 数据源配置 ====================
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/smart_campus?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: 123456
+    url: jdbc:mysql://175.178.81.113:3306/smart_campus?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root_zhz2
+    password: root_zhz2_123456
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
-      # 初始化连接数
       initial-size: 5
-      # 最小空闲连接数
       min-idle: 5
-      # 最大活跃连接数
       max-active: 20
-      # 获取连接等待超时时间
       max-wait: 60000
-      # 配置间隔多久进行一次检测，检测需要关闭的空闲连接
       time-between-eviction-runs-millis: 60000
-      # 配置连接在池中最小生存时间
       min-evictable-idle-time-millis: 300000
-      # 验证连接有效性的SQL
       validation-query: SELECT 1
-      # 空闲时检测连接是否有效
       test-while-idle: true
-      # 获取连接时检测是否有效
       test-on-borrow: false
-      # 归还连接时检测是否有效
       test-on-return: false
-      # 开启PSCache
       pool-prepared-statements: true
       max-pool-prepared-statement-per-connection-size: 20
-      # 配置监控统计拦截的filters
       filters: stat,wall,slf4j
-      # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
       connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=2000
-      # 配置DruidStatFilter
       web-stat-filter:
         enabled: true
         url-pattern: /*
         exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
-      # 配置DruidStatViewServlet（访问 http://localhost:8718/druid）
       stat-view-servlet:
         enabled: true
         url-pattern: /druid/*
@@ -83,9 +46,9 @@ spring:
   # ==================== Redis 配置 ====================
   data:
     redis:
-      host: 127.0.0.1
+      host: 175.178.81.113
       port: 6379
-      password:
+      password: root_zhz_123456
       database: 0
       timeout: 5000ms
       lettuce:
@@ -113,75 +76,25 @@ spring:
           model: qwen-plus
           temperature: 0.7
 
-
-
-
-
-# ==================== MyBatis Plus 配置 ====================
-mybatis-plus:
-  # 指定mybatis-plus的实体目录
-  type-aliases-package: com.smart.www.pojo
-  # 指定mybatis-plus的mapper文件
-  mapper-locations: classpath:com/smark/www/mapper/*.xml
-  configuration:
-    # 开启驼峰命名
-    map-underscore-to-camel-case: true
-    # 是否开启二级缓存
-    cache-enabled: false
-  global-config:
-    db-config:
-      # id为雪花算法生成
-      id-type: assign_id
-
-# ==================== Knife4j 配置 - API 文档增强工具 ====================
-# 访问地址: http://localhost:8718/doc.html
-knife4j:
-  # 开启 Knife4j 增强功能
-  enable: true
-  # 开启生产环境屏蔽（生产环境建议设为 true）
-  production: false
-  # 开启登录认证（可选）
-  basic:
-    enable: false
-
-# ==================== SpringDoc 配置 - 基于 OpenAPI 3 ====================
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
-  api-docs:
-    path: /v3/api-docs
-  group-configs:
-    - group: 'default'
-      paths-to-match: '/**'
-      packages-to-scan: com.smart.www.controller
-
 # ==================== 日志配置 ====================
 logging:
   level:
     root: INFO
-    com.smart.www: DEBUG
-    druid.sql.Statement: DEBUG
+    com.smart.www: INFO
+    druid.sql.Statement: INFO
   pattern:
     console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n'
+  file:
+    name: logs/smart-campus.log
+    max-size: 10MB
+    max-history: 30
 
-# ==================== Sa-Token 配置 ====================
-sa-token:
-  # token 名称（同时也是 cookie 名称）
-  token-name: satoken
-  # token 有效期（单位：秒） 默认30天，-1 代表永久有效
-  timeout: 2592000
-  # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
-  active-timeout: -1
-  # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
-  is-concurrent: true
-  # 在多人登录同一账号时，是否共用一个 token （为 true 时所有登录共用一个 token, 为 false 时每次登录新建一个 token）
-  is-share: true
-  # token 风格（默认可取值：uuid、simple-uuid、random-32、random-64、random-128、tik）
-  token-style: uuid
-  # 是否输出操作日志
-  is-log: true
+# ==================== Knife4j 配置 ====================
+knife4j:
+  enable: true
+  production: false  # 生产环境建议关闭文档
+  basic:
+    enable: false
 
 # ==================== 阿里云短信服务 ====================
 aliyun:
@@ -199,23 +112,12 @@ alipay:
   public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAirU5SHyVzozG0VtFSXhwGUGWs/Sxic5KOAS9KdwDJyF30elcRYKH2u6EJy+VY6TRK5dDDvBGDagD06P/prqGo/4aJ+FIOMIHhq1pT1mIZkIibaIa1Q770GetRv5p2r8xg0X9PEfK0Ho4s4I98QcOvFg4X9O7sEt3woRK3Po/9jsACNsmCox2tKFp8IjF3fwD90IfyD1x0xCR2tRByv5/kIYEEFE2S3dbpCnUw5XQSZWsCR/HdcV7/tfV0ZogqDGDfm6nnn8jXF75v7r14x5P22pxAYtaguoCQ4tfWWUbPKBbEfFAFyeqJHEN29gi5/A2rSjRBDuNMBefrAYScZjYawIDAQAB
   gateway-url: https://openapi-sandbox.dl.alipaydev.com/gateway.do
   notify-url: http://v2443f69.natappfree.cc/pay/notify
-  return-url: http://localhost:8718/pay/return
+  return-url: http://175.178.81.113:8718/pay/return
 
 # ==================== 书杰支付配置 ====================
 shujiepay:
-  # 商户ID（需要到书杰支付后台获取）
   pid: 1358
-  # 平台公钥（用于验签，在后台 API信息 页面获取）
   platform-public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApHOAw8DMPO4V3yVJcEcSBXafA1yZKk5BjOHEyzZUjpeIosb1jb5NOVnissJzA3MsJbbYyqQv+aHw7kCb3izPcMkeuQUVltsHTrhOh/Y/NGza1Twuk8YhKD6t/4G80mFcHL+VdUinA1rxeVvwybK1N1s0e5VWvuoPlArjLHNySEC+8kA8K+wpDgNcOe5PclZwrltoBoEWEs7mtOXp+qzX0zEI3sqOg52ID2buReUHL6Z/hTNP4Fz7xu78IYvVkAkKQb/W/NQIMFC7YVYSpVsM8/qAaAE+KHS7PUpzVORDmall4L8iwIbbLiT3Sfj2+XMAi2OQYuZSDwucYWVyOQYQzwIDAQAB
-  # 商户私钥（用于签名，生成RSA密钥对时保存）
   merchant-private-key: MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDbxzWYUXBLSyyTC4D+jE3rwanwIrs8PYt5jo3Eyb3jJmt1wppyNMVXkyBAVQkpjwU9P1lUt8yqH15UVWGiGDMdJwXbAxftGJel/A66siBfx806ZXig23tot5ZIEvm8U8DvNgvtzNJBTbT1+N3X33XURHDGqYIzWGyiWZxycYezQRmBb0KnUPtsSapyxAPBz1vqA6qNWA9qoHTvwhM428aQYiq7SCRgtB/NMOG5z/FSBkVG0yqgfTWupEzTvy7kcj3/RnIzPtWLukQZXDqfirQOb8yYsKjdm7hAZwJLTUWTnb+wSzRQzP1/oMDmEdRWcvdiFWMXbWK4gfqPpKI62YqjAgMBAAECggEBAIX7dufp1eyA4qauH7COtj4gbUow0jZSSsILLtAmMPXWiTJcNa2kEB5oWgP+EzzbrNT+1qW3+zRHNUlyV7fqytZd4Mr4otBu6pxNAmm8h9H8S1frXlOqGhzntt0vfEHcSUVLjJAnCpK3HbfKROwClaGXK61gzzggEvIScTavkYur5fpwXltrNfgs60Op7wJ7YFULcaN6rriiXa7dGX9FU82z0ZGC6JwNu2Iu0s+2bup/93ddJosUxPv7ul6qdsx/OXQ9bbxdXEf5AOl/4vKVxnaRUguaVZAzMTITByu2+UXlvSQvECJoASptCJJQrtv0LScBXQtoq++hv4btQsd8IGkCgYEA7tTlMV9bGUkRQyhfU5ColgxkKW5/Db8cPKe4mwbZjj8CWgspzRkhkuRmeK1DsenVdG7x/RcHE9jkT/1aeOHe2xlmJ67dklQ2IUVwu2iDhSv74fLC/twPz2xs5x9Occ+/1bpypWspt9+UtLUul3AAoopQRnj2F5sQ+zLIK314b88CgYEA65OuqyppZvaSyQb9woIqcHAWeZk6u51MMLz+uMZCwzazwIhP2EAk2cmUCT1+TqnrfI54k1g+Q7aQ/HT3zj5bmkm+oEbcUkkFCx+GDNF9XqTkAYepxncBJuPAObFL9gvUaUqO/ca7vrzPJoYPsTSf6FE/O4lrSJNfvbNRv8Y/eO0CgYEAmsym2T+DHnp7k9nhH5rNiqPxb+FMvK44MSBMyT7BWC+C6LX/nA5D8p/TwzgafoCfd95JPs/kKHsWULpYH63W8pAd5G608plelGYb0XzGclS16BefR+1+2eTfGVbzU1Vic7drg8hXu/RQwGgHEOTppHCd42+XomlBsm+Ryo6Ct4UCgYEAwx3RuRFqtY4aq4gv28/F6NTduJ9yZvx0o5WWAGKt31RKc3gzcbBHFV+BTlnxaKQSWFsEgT3AbIMk+QTETr2VT2gvDD9Esp6qH7lfZPSKOz6lXqMHukrM2HIgv2gau1K2/vJzFrxouiVWCdlV2/bzTw8kKWK7SiROUyfX2NgRsE0CgYALWobS8dKs0J2zYUy8YnOpvLjwxj78bd2sNkMVVnEJ2WA0aC0nNK7P3pXCiueYI6dPcl6uHF5WkKd36zDGLRWhh108+KExIOnPgQEpmmY2hwhTU+yhrvhNlowVEe/iAUnd2MxT8zeG9yf/T3dAPRVi4hIbkuIlwEnNEauMBNa/Gg==
-  # 异步通知地址（需要公网地址，可使用内网穿透工具）
   notify-url: http://v2443f69.natappfree.ccv
-  # 同步返回地址
   return-url: http://localhost:8718/pay/shujiepay/return
-
-
-
-
-
-

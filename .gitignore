@@ -1,6 +1,15 @@
 ### CUSTOM ###
 application-local.yaml
 
+# 环境变量文件 - 包含敏感信息，不要提交
+.env
+start-prod.sh
+start-prod.bat
+
+# 日志文件
+*.log
+logs/
+
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar

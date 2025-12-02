@@ -1,8 +1,0 @@
-sky:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    host: localhost
-    port: 3306
-    database: mybatis_plus_test
-    username: root
-    password: 123456
