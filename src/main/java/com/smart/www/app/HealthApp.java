@@ -13,6 +13,7 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -52,6 +53,9 @@ public class HealthApp {
     @Resource
     @Qualifier("healthAppRagCloudAdvisor")
     private Advisor cloudRagAdvisor;
+
+    @Resource
+    private ToolCallback[] allTools;
 
     public HealthApp(ChatModel dashscopeChatModel) {
         // 初始化基于内存的对话记忆
@@ -167,6 +171,7 @@ public class HealthApp {
                         // 使用组合检索 Advisor（先本地后云服务）
                         compositeRagAdvisor
                 )
+                .tools(allTools)
                 .call()
                 .chatResponse();
 
@@ -252,4 +257,6 @@ public class HealthApp {
      */
     public record HealthReport(String title, List<String> suggestions) {
     }
+
+
 }
