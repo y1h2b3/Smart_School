@@ -218,6 +218,9 @@ shujiepay:
 
 
 
-
+# ==================== AI搜索引擎配置 ====================
+# searchApi
+search-api:
+  api-key: vs82h1EV7bq6cKAHkZSyo2XL
 
 
