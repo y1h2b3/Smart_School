@@ -10,6 +10,9 @@ start-prod.bat
 *.log
 logs/
 
+# 临时文件目录
+tmp/
+
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
