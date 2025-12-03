@@ -165,6 +165,7 @@ logging:
     root: INFO
     com.smart.www: DEBUG
     druid.sql.Statement: DEBUG
+    org.springframework.ai: DEBUG
   pattern:
     console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n'
 
@@ -224,3 +225,6 @@ search-api:
   api-key: vs82h1EV7bq6cKAHkZSyo2XL
 
 
+logging:
+  level:
+    org.springframework.ai: DEBUG
