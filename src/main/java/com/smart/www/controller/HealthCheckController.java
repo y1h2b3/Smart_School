@@ -5,23 +5,22 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.smart.www.service.HealthCheckService;
 import com.smart.www.util.Result;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.ai.openai.OpenAiChatClient;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.ai.openai.OpenAiChatClient;
 
 @RestController
 @Tag(name = "健康检测分析")
 @SaCheckLogin(type = StpUtil.TYPE)
 public class HealthCheckController {
-    private final OpenAiChatClient OpenAiChatClient;
+    private final ChatModel chatModel;
     @Autowired
     private HealthCheckService healthCheckService;
 
-    public HealthCheckController(org.springframework.ai.openai.OpenAiChatClient openAiChatClient) {
-        OpenAiChatClient = openAiChatClient;
+    public HealthCheckController(ChatModel chatModel) {
+        this.chatModel = chatModel;
     }
 
     @GetMapping("/healthCheck")

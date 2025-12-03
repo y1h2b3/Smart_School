@@ -3,7 +3,7 @@ package com.smart.www.controller;
 import com.smart.www.pojo.UserHealth;
 import com.smart.www.service.UserHealthService;
 import com.smart.www.util.Result;
-import org.springframework.ai.openai.OpenAiChatClient;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,20 +14,22 @@ import java.util.Map;
 
 @RestController
 public class ChatController {
-    private final OpenAiChatClient OpenAiChatClient;
+    private final ChatModel chatModel;
     @Autowired
     private UserHealthService userHealthService;
 
-    public ChatController(OpenAiChatClient openAiChatClient) {
-        OpenAiChatClient = openAiChatClient;
+    public ChatController(ChatModel chatModel) {
+        this.chatModel = chatModel;
     }
 
     @GetMapping("/ai")
     public Map GPT(@RequestParam(value = "message", defaultValue = "讲个笑话") String message) {
         System.out.println(message);
-        System.out.println(OpenAiChatClient.call(message));
-        return Map.of("message", OpenAiChatClient.call(message));
+        String response = chatModel.call(message);
+        System.out.println(response);
+        return Map.of("message", response);
     }
+
     @GetMapping("/ai/Health")
     public Result getHealth(String uid) {
         List<UserHealth> userHealth = userHealthService.searchIdUserHealthType(uid);
@@ -49,7 +51,7 @@ public class ChatController {
                 "五、第一条建议\n" +
                 "六、第一条建议\n";
         System.out.println(message);
-        String call = OpenAiChatClient.call(message);
+        String call = chatModel.call(message);
         return Result.ok(call);
 
 

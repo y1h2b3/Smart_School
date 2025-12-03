@@ -107,11 +107,13 @@ spring:
           temperature: 0.7
     # 阿里云通义千问配置
     dashscope:
-      api-key: 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
+      api-key: sk-50795f7ffba54a8490b31b5b4f0e0829
       chat:
         options:
           model: qwen-plus
           temperature: 0.7
+      connection-timeout: 300000
+      read-timeout: 300000
 
 
 

@@ -2,13 +2,12 @@ package com.smart.www.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smart.www.mapper.HealthCheckMapper;
-import com.smart.www.mapper.HealthWarningNotificationsMapper;
 import com.smart.www.pojo.HealthWarningNotifications;
 import com.smart.www.pojo.UserHealth;
 import com.smart.www.service.HealthCheckService;
 import com.smart.www.service.HealthWarningNotificationsService;
 import com.smart.www.service.UserHealthService;
-import org.springframework.ai.openai.OpenAiChatClient;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,15 +21,16 @@ import java.util.regex.Pattern;
 
 public class HealthCheckImpl extends ServiceImpl<HealthCheckMapper, UserHealth>
         implements HealthCheckService {
-    private final OpenAiChatClient OpenAiChatClient;
+    private final ChatModel chatModel;
     @Autowired
     private UserHealthService userHealth;
     @Autowired
     private HealthCheckMapper healthCheck;
     @Autowired
     private HealthWarningNotificationsService healthWarning;
-    public HealthCheckImpl(org.springframework.ai.openai.OpenAiChatClient openAiChatClient) {
-        OpenAiChatClient = openAiChatClient;
+
+    public HealthCheckImpl(ChatModel chatModel) {
+        this.chatModel = chatModel;
     }
 
     public static int getHoursFromString(String timeString) {
