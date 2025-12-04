@@ -312,6 +312,32 @@ java -jar target/SmartSchool-0.0.1-SNAPSHOT.jar
 
 ### 1. AI 健康顾问（HealthApp）
 
+#### 功能概述
+
+HealthApp 是基于 Spring AI 框架构建的智能健康顾问系统，能够根据用户的健康数据生成个性化的健康建议。它集成了对话记忆、RAG 检索增强和 Function Calling 等先进的 AI 能力。
+
+#### 核心特性
+
+1. **个性化健康分析**
+    - 基于用户的身高、体重、BMI、心率、睡眠等多维度数据
+    - 生成针对性的健康建议和改善方案
+    - 支持健康趋势分析和预测
+
+2. **多轮对话支持**
+    - 基于 MessageChatMemoryAdvisor 实现对话上下文管理
+    - 支持连续对话，AI 能记住之前的交流内容
+    - 使用滑动窗口机制，避免 token 超限
+
+3. **RAG 检索增强**
+    - 从向量数据库检索相关健康知识
+    - 结合检索到的专业知识生成更准确的建议
+    - 支持本地向量库和云服务的组合检索
+
+4. **Function Calling**
+    - 自动调用工具生成 PDF 健康报告
+    - 支持文件操作、网页抓取等功能
+    - 可扩展的工具注册机制
+
 #### 技术实现
 
 ```java
@@ -339,27 +365,696 @@ public class HealthApp {
 }
 ```
 
-### 2. RAG 检索增强
+### 2. AI 恋爱顾问（LoveApp）
 
-#### 架构说明
+#### 功能概述
+
+LoveApp 是一个扮演恋爱心理专家的 AI 应用，能够为用户提供恋爱咨询和建议。它支持多种对话模式和结构化输出。
+
+#### 核心功能
+
+1. **普通对话模式**（`doChat`）
+    - 返回纯文本回复
+    - 支持多轮对话上下文
+    - 自动管理对话历史
+
+2. **结构化报告模式**（`doChatWithReport`）
+    - 返回 `LoveReport` 对象
+    - 包含标题和建议列表
+    - 自动 JSON 转 Java 对象
+
+3. **本地 RAG 模式**（`doChatWithLocalRag`）
+    - 从本地向量库检索恋爱知识
+    - 结合检索结果生成回答
+    - 适合离线或私有部署场景
+
+4. **组合 RAG 模式**（`doChatWithRag`）
+    - 先检索本地向量库
+    - 再检索云服务知识库
+    - 提供最全面的知识支持
+
+#### 使用示例
+
+**示例 1：普通对话**
+
+```java
+// 第一轮对话
+String response1 = loveApp.doChat("你好，我是程序员鱼皮", "user-123");
+// AI: 你好鱼皮！我是恋爱心理专家...
+
+// 第二轮对话（AI 会记住用户名）
+String response2 = loveApp.doChat("我想让另一半（编程导航）更爱我", "user-123");
+// AI: 鱼皮，关于如何让编程导航更爱你...
+
+// 第三轮对话（测试记忆能力）
+String response3 = loveApp.doChat("我的另一半叫什么来着？", "user-123");
+// AI: 你的另一半叫编程导航...
+```
+
+**示例 2：生成结构化报告**
+
+```java
+LoveReport report = loveApp.doChatWithReport(
+    "我和女朋友经常因为小事吵架，怎么办？", 
+    "user-123"
+);
+
+// 输出示例
+// {
+//   "title": "鱼皮的恋爱报告",
+//   "suggestions": [
+//     "学会倾听对方的真实想法",
+//     "避免在情绪激动时争吵",
+//     "建立有效的沟通机制",
+//     "培养共同的兴趣爱好"
+//   ]
+// }
+```
+
+**示例 3：使用 RAG 增强回答**
+
+```java
+// 使用本地知识库
+String response = loveApp.doChatWithLocalRag(
+    "异地恋如何维持感情？", 
+    "user-123"
+);
+// AI 会从本地向量库检索相关的恋爱知识，结合检索结果生成回答
+
+// 使用组合检索（本地+云服务）
+String response2 = loveApp.doChatWithRag(
+    "如何处理婆媳关系？", 
+    "user-123"
+);
+// AI 会先检索本地库，再检索云服务，提供更全面的建议
+```
+
+#### 技术实现细节
+
+```java
+@Component
+@Slf4j
+public class LoveApp {
+    
+    // 系统提示词：定义 AI 的人设
+    private static final String SYSTEM_PROMPT = 
+        "扮演深耕恋爱心理领域的专家...";
+    
+    private final ChatClient chatClient;
+    
+    public LoveApp(ChatModel dashscopeChatModel) {
+        // 1. 初始化对话记忆（滑动窗口模式）
+        MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
+                .chatMemoryRepository(new InMemoryChatMemoryRepository())
+                .maxMessages(20)  // 保留最近 20 条消息
+                .build();
+        
+        // 2. 构建 ChatClient
+        this.chatClient = ChatClient.builder(dashscopeChatModel)
+                .defaultSystem(SYSTEM_PROMPT)
+                .defaultAdvisors(
+                        MessageChatMemoryAdvisor.builder(chatMemory).build(),
+                        new MyLoggerAdvisor()
+                )
+                .build();
+    }
+    
+    // 普通对话
+    public String doChat(String message, String chatId) {
+        return chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .call()
+                .content();
+    }
+    
+    // 结构化输出
+    public LoveReport doChatWithReport(String message, String chatId) {
+        return chatClient.prompt()
+                .system(SYSTEM_PROMPT + "生成恋爱报告...")
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .call()
+                .entity(LoveReport.class);  // 自动 JSON 转对象
+    }
+    
+    // 结构化输出对象
+    public record LoveReport(String title, List<String> suggestions) {}
+}
+```
+
+### 3. RAG 检索增强生成
+
+#### 什么是 RAG？
+
+RAG（Retrieval-Augmented Generation，检索增强生成）是一种结合信息检索和文本生成的 AI 技术。它通过以下步骤工作：
 
 ```
-用户问题 → 向量化 → 相似度检索 → 上下文增强 → AI 生成回答
+┌─────────────┐
+│  用户问题    │
+└──────┬──────┘
+       ↓
+┌─────────────────────────────────────┐
+│  1. 向量化（Embedding）              │
+│  将问题转换为向量表示                │
+└──────┬──────────────────────────────┘
+       ↓
+┌─────────────────────────────────────┐
+│  2. 相似度检索（Similarity Search）  │
+│  从向量数据库中检索相关文档          │
+└──────┬──────────────────────────────┘
+       ↓
+┌─────────────────────────────────────┐
+│  3. 上下文增强（Context Enhancement）│
+│  将检索到的文档作为上下文            │
+└──────┬──────────────────────────────┘
+       ↓
+┌─────────────────────────────────────┐
+│  4. AI 生成回答（Generation）        │
+│  基于上下文生成准确的回答            │
+└──────┬──────────────────────────────┘
+       ↓
+┌─────────────┐
+│  返回结果    │
+└─────────────┘
 ```
 
-#### 组件说明
+#### 为什么需要 RAG？
 
-**文档加载器**：加载健康知识文档
-**向量存储**：PGVector（PostgreSQL 扩展）
-**文档检索器**：基于相似度的文档检索
-**Advisor 配置**：QuestionAnswerAdvisor
+1. **解决知识时效性问题**
+    - AI 模型的训练数据有时间截止点
+    - RAG 可以检索最新的知识库
+    - 实时更新知识，无需重新训练模型
 
-### 3. Function Calling 工具
+2. **提供专业领域知识**
+    - 通用 AI 模型对专业领域了解有限
+    - RAG 可以检索专业文档和资料
+    - 生成更准确、更专业的回答
 
-- **FileOperationTool**：文件读写操作
-- **PDFGenerationTool**：PDF 文档生成
-- **WebScrapingTool**：网页内容抓取
-- **WebSearchTool**：网络搜索
+3. **减少幻觉（Hallucination）**
+    - AI 可能生成不真实的内容
+    - RAG 基于真实文档生成回答
+    - 提高回答的可信度和准确性
+
+4. **支持私有知识库**
+    - 企业内部文档、专有知识
+    - 不需要将数据用于模型训练
+    - 保护数据隐私和安全
+
+#### 组件详解
+
+**1. 文档加载器（DocumentLoader）**
+
+负责加载和预处理知识文档。
+
+```java
+@Component
+public class HealthAppDocumentLoader {
+    
+    @Bean
+    public List<Document> healthDocuments() {
+        List<Document> documents = new ArrayList<>();
+        
+        // 从 Markdown 文件加载
+        MarkdownDocumentReader reader = new MarkdownDocumentReader(
+            new ClassPathResource("knowledge/health.md")
+        );
+        documents.addAll(reader.get());
+        
+        // 从数据库加载
+        List<HealthKnowledge> knowledgeList = healthKnowledgeService.list();
+        for (HealthKnowledge knowledge : knowledgeList) {
+            documents.add(new Document(
+                knowledge.getContent(),
+                Map.of("title", knowledge.getTitle())
+            ));
+        }
+        
+        return documents;
+    }
+}
+```
+
+**2. 向量存储（VectorStore）**
+
+使用 PGVector 存储文档向量，支持高效的相似度检索。
+
+```java
+@Configuration
+public class HealthAppVectorStoreConfig {
+    
+    @Bean
+    public VectorStore healthVectorStore(
+            JdbcTemplate jdbcTemplate,
+            EmbeddingModel embeddingModel) {
+        
+        return PgVectorStore.builder()
+                .jdbcTemplate(jdbcTemplate)
+                .embeddingModel(embeddingModel)
+                .dimensions(1536)  // 向量维度（取决于 Embedding 模型）
+                .distanceType(DistanceType.COSINE_DISTANCE)  // 余弦距离
+                .removeExistingVectorStoreTable(false)  // 保留现有表
+                .build();
+    }
+    
+    // 初始化向量库（首次运行）
+    @Bean
+    public CommandLineRunner initVectorStore(
+            VectorStore vectorStore,
+            List<Document> healthDocuments) {
+        return args -> {
+            // 将文档添加到向量库
+            vectorStore.add(healthDocuments);
+            log.info("向量库初始化完成，共 {} 个文档", healthDocuments.size());
+        };
+    }
+}
+```
+
+**3. 文档检索器（DocumentRetriever）**
+
+实现复合检索策略，先检索本地库，再检索云服务。
+
+```java
+@Component
+public class CompositeDocumentRetriever implements DocumentRetriever {
+    
+    private final VectorStore localVectorStore;
+    private final CloudSearchService cloudSearchService;
+    
+    @Override
+    public List<Document> retrieve(String query) {
+        List<Document> documents = new ArrayList<>();
+        
+        // 1. 从本地向量库检索
+        List<Document> localDocs = localVectorStore.similaritySearch(
+            SearchRequest.query(query)
+                .withTopK(3)  // 检索 Top 3
+                .withSimilarityThreshold(0.7)  // 相似度阈值
+        );
+        documents.addAll(localDocs);
+        
+        // 2. 如果本地结果不足，从云服务检索
+        if (documents.size() < 3) {
+            List<Document> cloudDocs = cloudSearchService.search(query, 3);
+            documents.addAll(cloudDocs);
+        }
+        
+        return documents;
+    }
+}
+```
+
+**4. RAG Advisor 配置**
+
+配置 QuestionAnswerAdvisor，实现检索增强。
+
+```java
+@Configuration
+public class HealthAppRagCloudAdvisorConfig {
+    
+    @Bean
+    public QuestionAnswerAdvisor healthRagAdvisor(
+            VectorStore vectorStore,
+            ChatModel chatModel) {
+        
+        return QuestionAnswerAdvisor.builder()
+                .vectorStore(vectorStore)
+                .chatModel(chatModel)
+                .searchRequest(SearchRequest.defaults()
+                        .withTopK(5)  // 检索 Top 5 相关文档
+                        .withSimilarityThreshold(0.7))  // 相似度阈值 0.7
+                .userTextAdvise("""
+                    使用以下上下文信息回答问题。
+                    如果上下文中没有相关信息，请明确告知用户。
+                    
+                    上下文：
+                    {context}
+                    
+                    问题：{question}
+                    """)
+                .build();
+    }
+}
+```
+
+#### RAG 工作流程示例
+
+假设用户问："如何改善睡眠质量？"
+
+1. **向量化**
+   ```
+   问题 "如何改善睡眠质量？" → Embedding 模型 → [0.123, -0.456, ...] (1536维向量)
+   ```
+
+2. **相似度检索**
+   ```sql
+   SELECT content, 1 - (embedding <=> '[0.123,-0.456,...]') AS similarity
+   FROM vector_store
+   WHERE 1 - (embedding <=> '[0.123,-0.456,...]') > 0.7
+   ORDER BY similarity DESC
+   LIMIT 5;
+   ```
+
+   检索结果：
+    - 文档1: "睡眠质量与作息规律的关系" (相似度 0.92)
+    - 文档2: "改善睡眠的10个方法" (相似度 0.88)
+    - 文档3: "深度睡眠的重要性" (相似度 0.85)
+
+3. **上下文增强**
+   ```
+   系统提示词 + 检索到的文档 + 用户问题 → 构建完整的 Prompt
+   ```
+
+4. **AI 生成回答**
+   ```
+   基于检索到的专业知识，生成准确的回答：
+   "改善睡眠质量的建议：
+   1. 保持规律的作息时间，每天同一时间睡觉和起床
+   2. 睡前避免使用电子设备，减少蓝光刺激
+   3. 创造舒适的睡眠环境，保持室温在18-22°C
+   ..."
+   ```
+
+### 4. Function Calling 工具调用
+
+#### 什么是 Function Calling？
+
+Function Calling 是 AI 模型主动调用外部工具和函数的能力。当 AI 判断需要执行某个操作时，它会生成函数调用请求，系统执行函数后将结果返回给 AI，AI 再基于结果生成最终回答。
+
+#### 工作流程
+
+```
+用户："帮我生成一份健康报告的 PDF"
+  ↓
+AI 分析：需要调用 PDFGenerationTool
+  ↓
+AI 生成函数调用：
+{
+  "name": "generateHealthReport",
+  "arguments": {
+    "title": "张三的健康报告",
+    "suggestions": ["建议1", "建议2"]
+  }
+}
+  ↓
+系统执行函数：生成 PDF 文件
+  ↓
+返回结果："/reports/health_report_20241204.pdf"
+  ↓
+AI 生成回复："已为您生成健康报告，文件路径：/reports/health_report_20241204.pdf"
+```
+
+#### 工具列表
+
+**1. FileOperationTool - 文件操作工具**
+
+```java
+@Component
+public class FileOperationTool {
+    
+    @Tool(description = "读取文件内容")
+    public String readFile(
+            @ToolParam(description = "文件路径") String filePath) {
+        try {
+            return Files.readString(Path.of(filePath));
+        } catch (IOException e) {
+            return "文件读取失败：" + e.getMessage();
+        }
+    }
+    
+    @Tool(description = "写入文件内容")
+    public String writeFile(
+            @ToolParam(description = "文件路径") String filePath,
+            @ToolParam(description = "文件内容") String content) {
+        try {
+            Files.writeString(Path.of(filePath), content);
+            return "文件写入成功：" + filePath;
+        } catch (IOException e) {
+            return "文件写入失败：" + e.getMessage();
+        }
+    }
+}
+```
+
+**使用示例**：
+
+```
+用户："帮我把健康建议保存到 advice.txt 文件"
+AI：调用 writeFile("/data/advice.txt", "建议内容...")
+结果："已将健康建议保存到 advice.txt"
+```
+
+**2. PDFGenerationTool - PDF 生成工具**
+
+```java
+
+@Component
+public class PDFGenerationTool {
+
+    @Tool(description = "生成 PDF 健康报告")
+    public String generateHealthReport(
+            @ToolParam(description = "报告标题") String title,
+            @ToolParam(description = "建议列表") List<String> suggestions) {
+
+        String outputPath = "/reports/health_" + System.currentTimeMillis() + ".pdf";
+
+        try {
+            // 使用 iText 生成 PDF
+            PdfWriter writer = new PdfWriter(outputPath);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            // 加载中文字体
+            PdfFont font = PdfFontFactory.createFont(
+                    "STSong-Light",
+                    "UniGB-UCS2-H"
+            );
+
+            // 添加标题
+            document.add(new Paragraph(title)
+                    .setFont(font)
+                    .setFontSize(20)
+                    .setBold());
+
+            // 添加建议列表
+            for (int i = 0; i < suggestions.size(); i++) {
+                document.add(new Paragraph(
+                        (i + 1) + ". " + suggestions.get(i)
+                ).setFont(font));
+            }
+
+            document.close();
+            return outputPath;
+
+        } catch (Exception e) {
+            return "PDF 生成失败：" + e.getMessage();
+        }
+    }
+}
+```
+
+**使用示例**：
+
+```
+用户："生成一份包含我健康建议的 PDF 报告"
+AI：分析用户健康数据 → 生成建议列表 → 调用 generateHealthReport()
+结果："已生成健康报告：/reports/health_1733299200000.pdf"
+```
+
+**3. WebScrapingTool - 网页抓取工具**
+
+```java
+@Component
+public class WebScrapingTool {
+    
+    @Tool(description = "抓取网页内容")
+    public String scrapeWebPage(
+            @ToolParam(description = "网页 URL") String url) {
+        try {
+            Document doc = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0")
+                    .timeout(5000)
+                    .get();
+            
+            // 提取正文内容
+            String content = doc.select("article, .content, .main").text();
+            
+            if (content.isEmpty()) {
+                content = doc.body().text();
+            }
+            
+            // 限制长度，避免 token 超限
+            return content.length() > 2000 
+                ? content.substring(0, 2000) + "..." 
+                : content;
+                
+        } catch (IOException e) {
+            return "网页抓取失败：" + e.getMessage();
+        }
+    }
+}
+```
+
+**使用示例**：
+
+```
+用户："帮我看看这篇文章讲了什么：https://example.com/health-tips"
+AI：调用 scrapeWebPage("https://example.com/health-tips")
+结果：抓取内容 → AI 总结 → "这篇文章主要介绍了..."
+```
+
+**4. WebSearchTool - 网络搜索工具**
+
+```java
+@Component
+public class WebSearchTool {
+    
+    private final RestTemplate restTemplate;
+    
+    @Tool(description = "搜索健康相关信息")
+    public List<SearchResult> searchHealth(
+            @ToolParam(description = "搜索关键词") String query) {
+        
+        // 调用搜索 API（示例使用 Bing Search API）
+        String apiUrl = "https://api.bing.microsoft.com/v7.0/search";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Ocp-Apim-Subscription-Key", apiKey);
+        
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromHttpUrl(apiUrl)
+                .queryParam("q", query)
+                .queryParam("count", 5);
+        
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+        
+        ResponseEntity<BingSearchResponse> response = restTemplate.exchange(
+                builder.toUriString(),
+                HttpMethod.GET,
+                entity,
+                BingSearchResponse.class
+        );
+        
+        // 解析搜索结果
+        return response.getBody().getWebPages().getValue().stream()
+                .map(page -> new SearchResult(
+                    page.getName(),
+                    page.getUrl(),
+                    page.getSnippet()
+                ))
+                .collect(Collectors.toList());
+    }
+    
+    public record SearchResult(String title, String url, String snippet) {}
+}
+```
+
+**使用示例**：
+
+```
+用户："最新的健康饮食建议有哪些？"
+AI：调用 searchHealth("健康饮食建议 2024")
+结果：获取搜索结果 → AI 总结 → "根据最新的搜索结果，2024年的健康饮食建议包括..."
+```
+
+#### 工具注册
+
+```java
+
+@Configuration
+public class ToolRegistration {
+
+    @Bean
+    public List<ToolCallback> toolCallbacks(
+            FileOperationTool fileOperationTool,
+            PDFGenerationTool pdfGenerationTool,
+            WebScrapingTool webScrapingTool,
+            WebSearchTool webSearchTool) {
+
+        return List.of(
+                // 注册文件操作工具
+                ToolCallback.builder()
+                        .name("readFile")
+                        .description("读取文件内容")
+                        .function(fileOperationTool::readFile)
+                        .build(),
+
+                ToolCallback.builder()
+                        .name("writeFile")
+                        .description("写入文件内容")
+                        .function(fileOperationTool::writeFile)
+                        .build(),
+
+                // 注册 PDF 生成工具
+                ToolCallback.builder()
+                        .name("generateHealthReport")
+                        .description("生成 PDF 健康报告")
+                        .function(pdfGenerationTool::generateHealthReport)
+                        .build(),
+
+                // 注册网页抓取工具
+                ToolCallback.builder()
+                        .name("scrapeWebPage")
+                        .description("抓取网页内容")
+                        .function(webScrapingTool::scrapeWebPage)
+                        .build(),
+
+                // 注册网络搜索工具
+                ToolCallback.builder()
+                        .name("searchHealth")
+                        .description("搜索健康相关信息")
+                        .function(webSearchTool::searchHealth)
+                        .build()
+        );
+    }
+}
+```
+
+#### 完整使用示例
+
+```java
+// 在 HealthApp 中集成工具
+@Component
+public class HealthApp {
+
+    private final ChatClient chatClient;
+
+    public HealthApp(
+            ChatModel dashscopeChatModel,
+            List<ToolCallback> tools) {  // 注入工具列表
+
+        this.chatClient = ChatClient.builder(dashscopeChatModel)
+                .defaultSystem("你是健康顾问，可以使用工具帮助用户")
+                .defaultTools(tools)  // 注册工具
+                .build();
+    }
+
+    public String chat(String message) {
+        return chatClient.prompt()
+                .user(message)
+                .call()
+                .content();
+    }
+}
+
+// 使用示例
+public class Example {
+    public static void main(String[] args) {
+        HealthApp app = ...; // 从 Spring 容器获取
+
+        // AI 会自动判断是否需要调用工具
+        String response1 = app.chat("帮我生成一份健康报告的 PDF");
+        // AI 调用 generateHealthReport() → 返回文件路径
+
+        String response2 = app.chat("搜索一下最新的减肥方法");
+        // AI 调用 searchHealth("最新减肥方法") → 总结搜索结果
+
+        String response3 = app.chat("我的 BMI 是多少？");
+        // AI 不需要调用工具，直接根据上下文回答
+    }
+}
+```
 
 ---
 
