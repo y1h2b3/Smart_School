@@ -125,4 +125,53 @@ public class HealthAppController {
 
         return Result.ok(healthReport);
     }
+
+    /**
+     * 测试接口：根据用户ID生成健康报告
+     * 测试用户ID: S202409000739
+     *
+     * @return 健康报告
+     */
+    @GetMapping("/test")
+    @Operation(summary = "测试健康报告", description = "使用指定用户ID测试健康报告生成")
+    public Result<HealthApp.HealthReport> testHealthReport() {
+        // 测试用户ID
+        String testUid = "S202409000739";
+        String testUsername = "测试用户";
+
+        // 1. 获取用户健康数据
+        List<UserHealth> userHealthList = userHealthService.searchIdUserHealthType(testUid);
+
+        if (userHealthList == null || userHealthList.isEmpty()) {
+            return Result.<HealthApp.HealthReport>build(null, ResultCodeEnum.ERROR)
+                    .message("未找到用户 " + testUid + " 的健康数据");
+        }
+
+        UserHealth userHealth = userHealthList.get(0);
+
+        // 打印用户健康数据，便于调试
+        System.out.println("========== 测试用户健康数据 ==========");
+        System.out.println("用户ID: " + testUid);
+        System.out.println("身高: " + userHealth.getHeight());
+        System.out.println("体重: " + userHealth.getWeight());
+        System.out.println("BMI: " + userHealth.getBmi());
+        System.out.println("体脂率: " + userHealth.getFatPercentage());
+        System.out.println("总睡眠: " + userHealth.getSleepTimeTotal() + " 小时");
+        System.out.println("深睡眠: " + userHealth.getDeepSleepTotal() + " 小时");
+        System.out.println("平均心率: " + userHealth.getMeanRestingHeartRate());
+        System.out.println("步数: " + userHealth.getStep());
+        System.out.println("运动时长: " + userHealth.getWalkingTime() + " 小时");
+        System.out.println("======================================");
+
+        // 2. 使用 RAG 生成健康报告
+        HealthApp.HealthReport healthReport = healthApp.generateHealthReportWithRag(
+                userHealth,
+                testUsername,
+                testUid
+        );
+
+        return Result.ok(healthReport);
+    }
+
+
 }

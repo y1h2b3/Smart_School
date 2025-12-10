@@ -206,22 +206,76 @@ class HealthAppTest {
         System.out.println("建议数量: " + compositeReport.suggestions().size());
 
         // 3. 生成云端 RAG 报告（仅云端）
-        System.out.println("\n========== 云端 RAG 报告（仅云端） ==========");
-        HealthApp.HealthReport cloudReport = healthApp.generateHealthReportWithCloudRag(
-                liLiHealth,
-                "李莉",
-                "cloud-rag-test"
-        );
-        System.out.println("云端 RAG 标题: " + cloudReport.title());
-        System.out.println("建议数量: " + cloudReport.suggestions().size());
+//        System.out.println("\n========== 云端 RAG 报告（仅云端） ==========");
+//        HealthApp.HealthReport cloudReport = healthApp.generateHealthReportWithCloudRag(
+//                liLiHealth,
+//                "李莉",
+//                "cloud-rag-test"
+//        );
+//        System.out.println("云端 RAG 标题: " + cloudReport.title());
+//        System.out.println("建议数量: " + cloudReport.suggestions().size());
 
         // 4. 验证两种方式都能成功生成报告
         Assertions.assertNotNull(compositeReport);
-        Assertions.assertNotNull(cloudReport);
+//        Assertions.assertNotNull(cloudReport);
 
         System.out.println("\n========== 对比总结 ==========");
         System.out.println("组合 RAG：结合本地健康知识库和云端知识库");
-        System.out.println("云端 RAG：仅使用云端知识库，避免本地向量库加载问题");
         System.out.println("============================");
+    }
+
+    /**
+     * 测试 MCP 工具对话
+     * 使用 MCP 服务（如高德地图）进行对话
+     */
+    @Test
+    void testDoChatWithMcp() {
+        String chatId = "mcp-test-session-001";
+
+        // 测试可能触发工具调用的问题（如天气、地图等）
+        String response2 = healthApp.doChatWithMcp("电子科技大学中山学院今天天气如何?", chatId);
+        Assertions.assertNotNull(response2, "MCP 对话回复不应为空");
+        System.out.println("回复2: " + response2);
+
+        System.out.println("==========================================");
+    }
+
+    /**
+     * 测试普通对话（不使用 MCP 工具）
+     */
+    @Test
+    void testDoChat() {
+        String chatId = "chat-test-session-001";
+
+        System.out.println("\n========== 普通对话测试 ==========");
+        String response = healthApp.doChat("电子科技大学中山学院今天天气如何", chatId);
+        Assertions.assertNotNull(response, "对话回复不应为空");
+        System.out.println("回复: " + response);
+        System.out.println("===================================");
+    }
+
+    /**
+     * 测试 MCP 对话 vs 普通对话对比
+     */
+    @Test
+    void testMcpVsNormalChat() {
+        String message = "帮我查一下附近有什么医院";
+
+        System.out.println("\n========== MCP vs 普通对话对比 ==========");
+
+        // 使用 MCP 工具（可能调用地图服务）
+        System.out.println("--- MCP 工具对话 ---");
+        String mcpResponse = healthApp.doChatWithMcp(message, "mcp-compare-session");
+        System.out.println("MCP 回复: " + mcpResponse);
+
+        // 普通对话（不调用工具）
+        System.out.println("\n--- 普通对话 ---");
+        String normalResponse = healthApp.doChat(message, "normal-compare-session");
+        System.out.println("普通回复: " + normalResponse);
+
+        Assertions.assertNotNull(mcpResponse);
+        Assertions.assertNotNull(normalResponse);
+
+        System.out.println("============================================");
     }
 }

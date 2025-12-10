@@ -14,8 +14,10 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
 import java.util.List;
@@ -77,6 +79,29 @@ public class HealthApp {
                 .build();
     }
 
+    @Resource
+    private ToolCallbackProvider toolCallbackProvider;
+
+    /**
+     * 构建健康数据变量映射（避免重复代码）
+     */
+    private Map<String, Object> buildVariables(UserHealth userHealth, String username) {
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("height", userHealth.getHeight());
+        variables.put("bmi", userHealth.getBmi());
+        variables.put("fatPercentage", userHealth.getFatPercentage());
+        variables.put("sleepTimeTotal", userHealth.getSleepTimeTotal());
+        variables.put("deepSleepTotal", userHealth.getDeepSleepTotal());
+        variables.put("lightSleepTotal", userHealth.getLightSleepTotal()); // 已修复：使用正确的浅睡眠数据
+        variables.put("meanRestingHeartRate", userHealth.getMeanRestingHeartRate());
+        variables.put("restingHeartRateMax", userHealth.getRestingHeartRateMax());
+        variables.put("restingHeartRateMin", userHealth.getRestingHeartRateMin());
+        variables.put("step", userHealth.getStep());
+        variables.put("walkingTime", userHealth.getWalkingTime());
+        variables.put("username", username);
+        return variables;
+    }
+
     /**
      * 根据用户健康数据生成健康建议报告
      *
@@ -90,19 +115,7 @@ public class HealthApp {
         PromptTemplate promptTemplate = new PromptTemplate(HEALTH_PROMPT_TEMPLATE);
 
         // 2. 准备变量映射
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("height", userHealth.getHeight());
-        variables.put("bmi", userHealth.getBmi());
-        variables.put("fatPercentage", userHealth.getFatPercentage());
-        variables.put("sleepTimeTotal", userHealth.getSleepTimeTotal());
-        variables.put("deepSleepTotal", userHealth.getDeepSleepTotal());
-        variables.put("lightSleepTotal", userHealth.getDeepSleepTotal()); // 注意：原代码bug，浅睡眠也用的deepSleepTotal
-        variables.put("meanRestingHeartRate", userHealth.getMeanRestingHeartRate());
-        variables.put("restingHeartRateMax", userHealth.getRestingHeartRateMax());
-        variables.put("restingHeartRateMin", userHealth.getRestingHeartRateMin());
-        variables.put("step", userHealth.getStep());
-        variables.put("walkingTime", userHealth.getWalkingTime());
-        variables.put("username", username);
+        Map<String, Object> variables = buildVariables(userHealth, username);
 
         // 3. 渲染模板生成最终提示词
         String renderedPrompt = promptTemplate.render(variables);
@@ -134,19 +147,7 @@ public class HealthApp {
         PromptTemplate promptTemplate = new PromptTemplate(HEALTH_PROMPT_TEMPLATE);
 
         // 2. 准备变量映射
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("height", userHealth.getHeight());
-        variables.put("bmi", userHealth.getBmi());
-        variables.put("fatPercentage", userHealth.getFatPercentage());
-        variables.put("sleepTimeTotal", userHealth.getSleepTimeTotal());
-        variables.put("deepSleepTotal", userHealth.getDeepSleepTotal());
-        variables.put("lightSleepTotal", userHealth.getDeepSleepTotal());
-        variables.put("meanRestingHeartRate", userHealth.getMeanRestingHeartRate());
-        variables.put("restingHeartRateMax", userHealth.getRestingHeartRateMax());
-        variables.put("restingHeartRateMin", userHealth.getRestingHeartRateMin());
-        variables.put("step", userHealth.getStep());
-        variables.put("walkingTime", userHealth.getWalkingTime());
-        variables.put("username", username);
+        Map<String, Object> variables = buildVariables(userHealth, username);
 
         // 3. 渲染模板生成最终提示词
         String renderedPrompt = promptTemplate.render(variables);
@@ -158,8 +159,10 @@ public class HealthApp {
                 .maxMessages(20)
                 .build();
 
-        // 5. 调用 AI 生成结构化报告（使用 RAG）
-        ChatResponse chatResponse = chatClient
+        // 5. 调用 AI 生成结构化报告（使用 RAG + Tools）
+        // 一次调用即可：entity() 方法会自动调用 AI 并解析为结构化对象
+        // 同时保留 tools 支持，允许 AI 在生成报告时调用工具（如生成PDF、写文件等）
+        HealthReport healthReport = chatClient
                 .prompt()
                 .user(renderedPrompt)
                 // 传入会话 ID
@@ -171,23 +174,8 @@ public class HealthApp {
                         // 使用组合检索 Advisor（先本地后云服务）
                         compositeRagAdvisor
                 )
-                .tools(allTools)
-                .call()
-                .chatResponse();
-
-        // 6. 解析结构化输出
-        String content = chatResponse.getResult().getOutput().getText();
-        log.info("RAG Health Report Response: {}", content);
-
-        // 7. 重新调用以获取结构化输出
-        HealthReport healthReport = chatClient
-                .prompt()
-                .user(renderedPrompt)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .advisors(
-                        MessageChatMemoryAdvisor.builder(chatMemory).build(),
-                        compositeRagAdvisor
-                )
+                .toolCallbacks(toolCallbackProvider)
+                .toolCallbacks(allTools) // 支持 Function Calling（PDF生成、文件操作等）
                 .call()
                 .entity(HealthReport.class);
 
@@ -209,41 +197,18 @@ public class HealthApp {
         PromptTemplate promptTemplate = new PromptTemplate(HEALTH_PROMPT_TEMPLATE);
 
         // 2. 准备变量映射
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("height", userHealth.getHeight());
-        variables.put("bmi", userHealth.getBmi());
-        variables.put("fatPercentage", userHealth.getFatPercentage());
-        variables.put("sleepTimeTotal", userHealth.getSleepTimeTotal());
-        variables.put("deepSleepTotal", userHealth.getDeepSleepTotal());
-        variables.put("lightSleepTotal", userHealth.getDeepSleepTotal());
-        variables.put("meanRestingHeartRate", userHealth.getMeanRestingHeartRate());
-        variables.put("restingHeartRateMax", userHealth.getRestingHeartRateMax());
-        variables.put("restingHeartRateMin", userHealth.getRestingHeartRateMin());
-        variables.put("step", userHealth.getStep());
-        variables.put("walkingTime", userHealth.getWalkingTime());
-        variables.put("username", username);
+        Map<String, Object> variables = buildVariables(userHealth, username);
 
         // 3. 渲染模板生成最终提示词
         String renderedPrompt = promptTemplate.render(variables);
         log.info("Generated prompt with Cloud RAG: {}", renderedPrompt);
 
-        // 4. 创建对话记忆
-        MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
-                .chatMemoryRepository(new InMemoryChatMemoryRepository())
-                .maxMessages(20)
-                .build();
-
-        // 5. 调用 AI 生成结构化报告（仅使用云端 RAG）
+        // 4. 调用 AI 生成结构化报告（仅使用云端 RAG）
         HealthReport healthReport = chatClient
                 .prompt()
                 .user(renderedPrompt)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .advisors(
-                        // 启用对话记忆 Advisor
-                        MessageChatMemoryAdvisor.builder(chatMemory).build(),
-                        // 仅使用云端检索 Advisor
-                        cloudRagAdvisor
-                )
+                .advisors(cloudRagAdvisor)
                 .call()
                 .entity(HealthReport.class);
 
@@ -252,10 +217,72 @@ public class HealthApp {
     }
 
     /**
+     * 使用 MCP 工具进行对话
+     * 支持调用外部工具（如地图、天气等 MCP 服务）
+     *
+     * @param message 用户消息
+     * @param chatId  会话ID（用于记忆管理）
+     * @return AI 回复内容
+     */
+    public String doChatWithMcp(String message, String chatId) {
+        ChatResponse response = chatClient
+                .prompt()
+                .user(message)
+                // 使用 ChatMemory.CONVERSATION_ID 传入会话ID
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                // 开启日志，便于观察效果
+                .advisors(new MyLoggerAdvisor())
+                // 启用 MCP 工具调用（ToolCallbackProvider 需要使用 toolCallbacks 方法）
+                .toolCallbacks(toolCallbackProvider)
+                .call()
+                .chatResponse();
+        String content = response.getResult().getOutput().getText();
+        log.info("MCP Chat content: {}", content);
+        return content;
+    }
+
+    /**
+     * 普通对话（不使用 MCP 工具）
+     *
+     * @param message 用户消息
+     * @param chatId  会话ID（用于记忆管理）
+     * @return AI 回复内容
+     */
+    public String doChat(String message, String chatId) {
+        ChatResponse response = chatClient
+                .prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(new MyLoggerAdvisor())
+                .call()
+                .chatResponse();
+        String content = response.getResult().getOutput().getText();
+        log.info("Chat content: {}", content);
+        return content;
+    }
+
+    /**
      * 结构化输出对象：健康报告
      * Spring AI 会自动将 JSON 结果映射为该 Java Record
      */
     public record HealthReport(String title, List<String> suggestions) {
+    }
+
+
+    /**
+     * 流式对话（支持 SSE）
+     *
+     * @param message 用户消息
+     * @param chatId  会话ID（用于记忆管理）
+     * @return 流式响应
+     */
+    public Flux<String> doChatByStream(String message, String chatId) {
+        return chatClient
+                .prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .stream()
+                .content();
     }
 
 

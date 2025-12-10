@@ -308,19 +308,19 @@ public interface UserHealthDailyMapper extends BaseMapper<UserHealthDaily> {
     List<RankList> FindStudentRankList();
 
     @Select("SELECT\n" +
-            "    SUM(IF(DATE(u.create_time) = '2024-04-25' AND u.sleep_time_total >= 8, 1, 0)) AS 'Monday',\n" +
-            "    SUM(IF(DATE(u.create_time) = '2024-04-26' AND u.sleep_time_total >= 8, 1, 0)) AS 'Tuesday',\n" +
-            "    SUM(IF(DATE(u.create_time) = '2024-04-27' AND u.sleep_time_total >= 8, 1, 0)) AS 'Wednesday',\n" +
-            "    SUM(IF(DATE(u.create_time) = '2024-04-28' AND u.sleep_time_total >= 8, 1, 0)) AS 'Thursday',\n" +
-            "    SUM(IF(DATE(u.create_time) = '2024-04-29' AND u.sleep_time_total >= 8, 1, 0)) AS 'Friday',\n" +
-            "    SUM(IF(DATE(u.create_time) = '2024-04-30' AND u.sleep_time_total >= 8, 1, 0)) AS 'Saturday',\n" +
-            "    SUM(IF(DATE(u.create_time) = '2024-04-30' AND u.sleep_time_total >= 8, 1, 0)) AS 'Sunday'\n" +
+            "    SUM(IF(DATE(u.create_time) = '2025-11-03' AND u.sleep_time_total >= 8, 1, 0)) AS 'Monday',\n" +
+            "    SUM(IF(DATE(u.create_time) = '2025-11-04' AND u.sleep_time_total >= 8, 1, 0)) AS 'Tuesday',\n" +
+            "    SUM(IF(DATE(u.create_time) = '2025-11-05' AND u.sleep_time_total >= 8, 1, 0)) AS 'Wednesday',\n" +
+            "    SUM(IF(DATE(u.create_time) = '2025-11-06' AND u.sleep_time_total >= 8, 1, 0)) AS 'Thursday',\n" +
+            "    SUM(IF(DATE(u.create_time) = '2025-11-07' AND u.sleep_time_total >= 8, 1, 0)) AS 'Friday',\n" +
+            "    SUM(IF(DATE(u.create_time) = '2025-11-08' AND u.sleep_time_total >= 8, 1, 0)) AS 'Saturday',\n" +
+            "    SUM(IF(DATE(u.create_time) = '2025-11-09' AND u.sleep_time_total >= 8, 1, 0)) AS 'Sunday'\n" +
             "FROM\n" +
             "    user_health_daily u\n" +
             "JOIN\n" +
             "    ${type} s ON u.user_id = s.${type}_id\n" +
             "WHERE\n" +
-            "    DATE(u.create_time) BETWEEN '2024-04-25' AND '2024-04-30'\n" +
+            "    DATE(u.create_time) BETWEEN '2025-11-03' AND '2025-11-09'\n" +
             "    AND u.sleep_time_total >= 8\n" +
             "    AND s.sex = #{sex};")
     List<dateList> FindSleepReach(String type, String sex);
