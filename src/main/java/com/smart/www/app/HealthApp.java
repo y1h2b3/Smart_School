@@ -285,5 +285,72 @@ public class HealthApp {
                 .content();
     }
 
+    /**
+     * 支持开关的对话（同步）
+     *
+     * @param message            用户消息
+     * @param chatId             会话ID
+     * @param enableWebSearch    是否启用联网搜索
+     * @param enableDeepThinking 是否启用深度思考
+     * @return AI 回复内容
+     */
+    public String doChatWithOptions(String message, String chatId, boolean enableWebSearch, boolean enableDeepThinking) {
+        // 构建提示词
+        String enhancedMessage = message;
+        if (enableDeepThinking) {
+            enhancedMessage = "请深入思考以下问题，分析多个角度并给出详细的推理过程：\n" + message;
+        }
+
+        var promptSpec = chatClient
+                .prompt()
+                .user(enhancedMessage)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(new MyLoggerAdvisor());
+
+        // 如果启用联网搜索，添加 WebSearchTool
+        if (enableWebSearch) {
+            promptSpec = promptSpec.toolCallbacks(allTools);
+        }
+
+        ChatResponse response = promptSpec.call().chatResponse();
+        String content = response.getResult().getOutput().getText();
+        log.info("Chat with options - WebSearch: {}, DeepThinking: {}, Content: {}",
+                enableWebSearch, enableDeepThinking, content);
+        return content;
+    }
+
+    /**
+     * 支持开关的流式对话
+     *
+     * @param message            用户消息
+     * @param chatId             会话ID
+     * @param enableWebSearch    是否启用联网搜索
+     * @param enableDeepThinking 是否启用深度思考
+     * @return 流式响应
+     */
+    public Flux<String> doChatByStreamWithOptions(String message, String chatId,
+                                                  boolean enableWebSearch, boolean enableDeepThinking) {
+        // 构建提示词
+        String enhancedMessage = message;
+        if (enableDeepThinking) {
+            enhancedMessage = "请深入思考以下问题，分析多个角度并给出详细的推理过程：\n" + message;
+        }
+
+        var promptSpec = chatClient
+                .prompt()
+                .user(enhancedMessage)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId));
+
+        // 如果启用联网搜索，添加 WebSearchTool
+        if (enableWebSearch) {
+            promptSpec = promptSpec.toolCallbacks(allTools);
+        }
+
+        log.info("Stream chat with options - WebSearch: {}, DeepThinking: {}",
+                enableWebSearch, enableDeepThinking);
+
+        return promptSpec.stream().content();
+    }
+
 
 }
