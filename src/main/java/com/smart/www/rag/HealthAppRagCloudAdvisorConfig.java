@@ -84,4 +84,14 @@ public class HealthAppRagCloudAdvisorConfig {
                 .documentRetriever(healthCloudDocumentRetriever)
                 .build();
     }
+
+    /**
+     * 仅使用本地知识库检索的 Advisor
+     */
+    @Bean
+    public Advisor healthAppLocalRagAdvisor(DocumentRetriever healthLocalDocumentRetriever) {
+        return RetrievalAugmentationAdvisor.builder()
+                .documentRetriever(healthLocalDocumentRetriever)
+                .build();
+    }
 }

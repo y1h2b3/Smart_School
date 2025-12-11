@@ -55,6 +55,9 @@ public class HealthApp {
     @Resource
     @Qualifier("healthAppRagCloudAdvisor")
     private Advisor cloudRagAdvisor;
+    @Resource
+    @Qualifier("healthAppLocalRagAdvisor")
+    private Advisor localRagAdvisor;
 
     @Resource
     private ToolCallback[] allTools;
@@ -153,29 +156,18 @@ public class HealthApp {
         String renderedPrompt = promptTemplate.render(variables);
         log.info("Generated prompt with RAG: {}", renderedPrompt);
 
-        // 4. 创建对话记忆
-        MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
-                .chatMemoryRepository(new InMemoryChatMemoryRepository())
-                .maxMessages(20)
-                .build();
-
-        // 5. 调用 AI 生成结构化报告（使用 RAG + Tools）
+        // 4. 调用 AI 生成结构化报告（使用 RAG + Tools）
         // 一次调用即可：entity() 方法会自动调用 AI 并解析为结构化对象
         // 同时保留 tools 支持，允许 AI 在生成报告时调用工具（如生成PDF、写文件等）
         HealthReport healthReport = chatClient
                 .prompt()
                 .user(renderedPrompt)
-                // 传入会话 ID
+                // 传入会话 ID（使用构造函数中配置的 defaultAdvisors 中的 ChatMemory）
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                // 应用组合检索和对话记忆
-                .advisors(
-                        // 启用对话记忆 Advisor
-                        MessageChatMemoryAdvisor.builder(chatMemory).build(),
-                        // 使用组合检索 Advisor（先本地后云服务）
-                        compositeRagAdvisor
-                )
-                .toolCallbacks(toolCallbackProvider)
-                .toolCallbacks(allTools) // 支持 Function Calling（PDF生成、文件操作等）
+                // 应用组合检索 Advisor
+                .advisors(compositeRagAdvisor)
+                // 仅使用 allTools（包含 WebSearchTool, PDFGenerationTool 等）
+                .toolCallbacks(allTools)
                 .call()
                 .entity(HealthReport.class);
 
@@ -230,8 +222,6 @@ public class HealthApp {
                 .user(message)
                 // 使用 ChatMemory.CONVERSATION_ID 传入会话ID
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                // 开启日志，便于观察效果
-                .advisors(new MyLoggerAdvisor())
                 // 启用 MCP 工具调用（ToolCallbackProvider 需要使用 toolCallbacks 方法）
                 .toolCallbacks(toolCallbackProvider)
                 .call()
@@ -253,7 +243,6 @@ public class HealthApp {
                 .prompt()
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .advisors(new MyLoggerAdvisor())
                 .call()
                 .chatResponse();
         String content = response.getResult().getOutput().getText();
@@ -271,6 +260,7 @@ public class HealthApp {
 
     /**
      * 流式对话（支持 SSE）
+     * 默认启用本地知识库 RAG
      *
      * @param message 用户消息
      * @param chatId  会话ID（用于记忆管理）
@@ -281,6 +271,7 @@ public class HealthApp {
                 .prompt()
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(localRagAdvisor)  // 默认启用本地知识库 RAG
                 .stream()
                 .content();
     }
@@ -304,8 +295,7 @@ public class HealthApp {
         var promptSpec = chatClient
                 .prompt()
                 .user(enhancedMessage)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .advisors(new MyLoggerAdvisor());
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId));
 
         // 如果启用联网搜索，添加 WebSearchTool
         if (enableWebSearch) {
@@ -321,11 +311,12 @@ public class HealthApp {
 
     /**
      * 支持开关的流式对话
+     * 默认启用本地知识库 RAG，可选启用联网搜索和 MCP 服务
      *
      * @param message            用户消息
      * @param chatId             会话ID
      * @param enableWebSearch    是否启用联网搜索
-     * @param enableDeepThinking 是否启用深度思考
+     * @param enableDeepThinking 是否启用深度思考/MCP服务
      * @return 流式响应
      */
     public Flux<String> doChatByStreamWithOptions(String message, String chatId,
@@ -339,14 +330,20 @@ public class HealthApp {
         var promptSpec = chatClient
                 .prompt()
                 .user(enhancedMessage)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId));
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(localRagAdvisor);  // 默认启用本地知识库 RAG
 
         // 如果启用联网搜索，添加 WebSearchTool
         if (enableWebSearch) {
             promptSpec = promptSpec.toolCallbacks(allTools);
         }
 
-        log.info("Stream chat with options - WebSearch: {}, DeepThinking: {}",
+        // 如果启用深度思考/MCP服务，添加 MCP 工具
+        if (enableDeepThinking) {
+            promptSpec = promptSpec.toolCallbacks(toolCallbackProvider);
+        }
+
+        log.info("Stream chat with options - WebSearch: {}, DeepThinking/MCP: {}",
                 enableWebSearch, enableDeepThinking);
 
         return promptSpec.stream().content();

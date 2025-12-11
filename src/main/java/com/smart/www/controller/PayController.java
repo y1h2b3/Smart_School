@@ -37,7 +37,8 @@ public class PayController {
     //支付宝异步通知路径,付款完毕后会异步调用本项目的方法,必须为公网地址
     private final String NOTIFY_URL = "http://v2443f69.natappfree.cc/pay/notify";
     //支付宝同步通知路径,也就是当付款完毕后跳转本项目的页面,可以不是公网地址
-    private final String RETURN_URL = "http://localhost:8718/pay/return";
+    // 注意：会在 alipay 方法中动态拼接订单信息参数
+    private final String RETURN_URL_BASE = "http://localhost:8718/pay/return";
     @Autowired
     private OrdersService orderService;
     @Autowired
@@ -45,7 +46,7 @@ public class PayController {
 
     //必须加ResponseBody注解，否则spring会寻找thymeleaf页面
     @ResponseBody
-    @RequestMapping("/pay/alipay")
+    @RequestMapping(value = "/pay/alipay", produces = "text/html;charset=UTF-8")
     public String alipay(HttpSession session,
                          @RequestParam(value = "dona_drugId") String dona_drugId,
                          @RequestParam(value = "dona_money") float dona_money,
@@ -63,33 +64,33 @@ public class PayController {
         //计算总金额（不要修改原始单价）
         float totalAmount = dona_money * dona_sum;
 
-        //把订单信息放在session中（用于回调）
-        session.setAttribute("dona_userId", dona_userId);
-        session.setAttribute("dona_unit_price", dona_money);  // 保存单价
-        session.setAttribute("dona_drugId", dona_drugId);
-        session.setAttribute("dona_sum", dona_sum);
-        session.setAttribute("dona_order_id", OrderNum);  // 保存完整订单号
-        session.setAttribute("dona_name", name);
-
         String dona_name = orderService.findID(dona_drugId);
 
+        // 动态生成 return_url，将订单信息通过 URL 参数传递，避免 Session 丢失问题
+        String returnUrl = RETURN_URL_BASE + "?orderId=" + OrderNum
+                + "&userId=" + dona_userId
+                + "&drugId=" + dona_drugId
+                + "&unitPrice=" + dona_money
+                + "&quantity=" + dona_sum;
+
         //调用封装好的方法（给支付宝接口发送请求）
-        return sendRequestToAlipay(OrderNum, totalAmount, dona_name, name);
+        return sendRequestToAlipay(OrderNum, totalAmount, dona_name, name, returnUrl);
     }
 
     /*
 参数1：订单号
 参数2：订单金额
 参数3：订单名称
+参数4：回调URL（包含订单参数）
  */
     //支付宝官方提供的接口
-    private String sendRequestToAlipay(String outTradeNo, Float totalAmount, String subject,String name) throws AlipayApiException {
+    private String sendRequestToAlipay(String outTradeNo, Float totalAmount, String subject, String name, String returnUrl) throws AlipayApiException {
         //获得初始化的AlipayClient
         AlipayClient alipayClient = new DefaultAlipayClient(GATEWAY_URL, APP_ID, APP_PRIVATE_KEY, FORMAT, CHARSET, ALIPAY_PUBLIC_KEY, SIGN_TYPE);
 
         //设置请求参数
         AlipayTradePagePayRequest alipayRequest = new AlipayTradePagePayRequest();
-        alipayRequest.setReturnUrl(RETURN_URL);
+        alipayRequest.setReturnUrl(returnUrl);  // 使用动态生成的回调URL
         alipayRequest.setNotifyUrl(NOTIFY_URL);
 
         //商品描述（可空）
@@ -106,20 +107,20 @@ public class PayController {
     }
 
     @GetMapping("/pay/return")
-    public String payReturn(HttpSession session) {
+    public String payReturn(
+            @RequestParam(value = "orderId", required = false) String orderId,
+            @RequestParam(value = "userId", required = false) String dona_userId,
+            @RequestParam(value = "drugId", required = false) String dona_drugId,
+            @RequestParam(value = "unitPrice", required = false) Float unitPrice,
+            @RequestParam(value = "quantity", required = false) Integer dona_sum,
+            HttpSession session) {
         System.out.println("支付成功回调");
+        System.out.println("回调参数: orderId=" + orderId + ", userId=" + dona_userId + ", drugId=" + dona_drugId);
 
-        //从session获取订单信息
-        String orderId = (String) session.getAttribute("dona_order_id");
-        String dona_userId = (String) session.getAttribute("dona_userId");
-        String dona_drugId = (String) session.getAttribute("dona_drugId");
-        Float unitPrice = (Float) session.getAttribute("dona_unit_price");  // 获取单价
-        Integer dona_sum = (Integer) session.getAttribute("dona_sum");
-
-        // 验证必要参数
+        // 验证必要参数（现在从LURL参数获取，不再依赖Session）
         if (orderId == null || dona_userId == null || unitPrice == null) {
-            System.err.println("Session数据丢失，无法创建订单");
-            return "redirect:http://localhost:5173/index?error=session_lost";
+            System.err.println("回调参数丢失，无法创建订单");
+            return "redirect:http://localhost:5173/store-buy?error=params_lost";
         }
 
         // 检查订单是否已存在（防止重复创建）
