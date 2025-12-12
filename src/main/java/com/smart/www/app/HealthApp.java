@@ -31,6 +31,16 @@ import java.util.Map;
 @Slf4j
 public class HealthApp {
 
+    // 全局系统提示：统一“学校”含义
+    private static final String GLOBAL_SYSTEM_PROMPT = """
+            你是智慧校园健康管理系统的智能健康顾问。
+
+            术语约定：
+            1. 在本系统以及相关对话中，凡未特别指明的『学校』、『本校』等字样，一律默认指『电子科技大学中山学院』。
+            2. 只有当用户问题中明确写出其他学校名称（如『某某大学』）时，才将『学校』理解为该名称对应的学校。
+            3. 如遇歧义，请优先解释为电子科技大学中山学院。
+            """;
+
     // 健康建议提示词模板
     private static final String HEALTH_PROMPT_TEMPLATE = """
             我的身高是{height}，
@@ -71,6 +81,8 @@ public class HealthApp {
 
         // 构建 ChatClient
         chatClient = ChatClient.builder(dashscopeChatModel)
+                // 全局系统规则：未指定时，“学校”默认指电子科技大学中山学院
+                .defaultSystem(GLOBAL_SYSTEM_PROMPT)
                 .defaultAdvisors(
                         // 启用对话记忆 Advisor
                         MessageChatMemoryAdvisor.builder(chatMemory).build(),

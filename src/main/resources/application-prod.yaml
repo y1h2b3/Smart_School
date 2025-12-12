@@ -77,6 +77,21 @@ spring:
           temperature: 0.7
       connection-timeout: 300000
       read-timeout: 300000
+    
+    # MCP 客户端配置（Linux 版本）
+    # 注意：需要在服务器上安装 Node.js（npm install -g npx）
+    mcp:
+      client:
+        request-timeout: 120s
+        stdio:
+          connections:
+            amap-maps:
+              command: npx
+              args:
+                - -y
+                - "@amap/amap-maps-mcp-server"
+              env:
+                AMAP_MAPS_API_KEY: 97d46cfa6c03fc5506ca5990c932ae2b
 
 # ==================== 日志配置 ====================
 logging:
